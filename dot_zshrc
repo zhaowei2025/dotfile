@@ -1,0 +1,183 @@
+source /usr/share/zsh/config/zshrc
+export PROMPT='$CYAN%n@$YELLOW$(hostname):$FG[039]$GREEN$(_fish_collapsed_pwd)%f > '
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/clangd/clangd_19.1.2/bin:$PATH"
+
+# =============================================================================
+# 代理开启关闭快捷命令
+# =============================================================================
+
+# 代理服务器配置 (根据你的实际代理服务器修改)
+PROXY_HOST="10.0.11.100"
+PROXY_PORT="7890"
+PROXY_URL="http://${PROXY_HOST}:${PROXY_PORT}"
+
+# 开启代理
+function proxy_on() {
+    export http_proxy="${PROXY_URL}"
+    export https_proxy="${PROXY_URL}"
+    export HTTP_PROXY="${PROXY_URL}"
+    export HTTPS_PROXY="${PROXY_URL}"
+    export ftp_proxy="${PROXY_URL}"
+    export FTP_PROXY="${PROXY_URL}"
+    export all_proxy="${PROXY_URL}"
+    export ALL_PROXY="${PROXY_URL}"
+    
+    # 设置不走代理的地址 (本地地址和内网地址)
+    export no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,172.16.0.0/12,::1"
+    export NO_PROXY="localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16,172.16.0.0/12,::1"
+    
+    echo "🌐 代理已开启"
+    echo "   HTTP Proxy:  ${http_proxy}"
+    echo "   HTTPS Proxy: ${https_proxy}"
+    echo "   No Proxy:    ${no_proxy}"
+}
+
+# 关闭代理
+function proxy_off() {
+    unset http_proxy
+    unset https_proxy
+    unset HTTP_PROXY
+    unset HTTPS_PROXY
+    unset ftp_proxy
+    unset FTP_PROXY
+    unset all_proxy
+    unset ALL_PROXY
+    unset no_proxy
+    unset NO_PROXY
+    
+    echo "🚫 代理已关闭"
+}
+
+# 查看代理状态
+function proxy_status() {
+    echo "📡 代理状态："
+    if [ -n "$http_proxy" ]; then
+        echo "   ✅ 代理已开启"
+        echo "   HTTP:  ${http_proxy:-未设置}"
+        echo "   HTTPS: ${https_proxy:-未设置}"
+        echo "   No Proxy: ${no_proxy:-未设置}"
+    else
+        echo "   ❌ 代理已关闭"
+    fi
+}
+
+# 测试代理连接
+function proxy_test() {
+    if [ -n "$http_proxy" ]; then
+        echo "🔍 测试代理连接..."
+        echo "当前代理: ${http_proxy}"
+        
+        # 测试代理服务器是否可达
+        if curl -s --connect-timeout 5 --proxy "${http_proxy}" "http://www.google.com" > /dev/null; then
+            echo "✅ 代理连接正常"
+        else
+            echo "❌ 代理连接失败"
+        fi
+        
+        # 显示当前 IP
+        echo "🌍 当前外网 IP:"
+        curl -s --connect-timeout 10 --proxy "${http_proxy}" "https://ipinfo.io/ip" || echo "获取 IP 失败"
+    else
+        echo "❌ 代理未开启，请先运行 proxy_on"
+    fi
+}
+
+# Git 代理设置
+function git_proxy_on() {
+    git config --global http.proxy "${PROXY_URL}"
+    git config --global https.proxy "${PROXY_URL}"
+    echo "✅ Git 代理已开启: ${PROXY_URL}"
+}
+
+function git_proxy_off() {
+    git config --global --unset http.proxy
+    git config --global --unset https.proxy
+    echo "✅ Git 代理已关闭"
+}
+
+function git_proxy_status() {
+    echo "📡 Git 代理状态："
+    local git_http_proxy=$(git config --global --get http.proxy)
+    local git_https_proxy=$(git config --global --get https.proxy)
+    
+    if [ -n "$git_http_proxy" ] || [ -n "$git_https_proxy" ]; then
+        echo "   ✅ Git 代理已开启"
+        echo "   HTTP:  ${git_http_proxy:-未设置}"
+        echo "   HTTPS: ${git_https_proxy:-未设置}"
+    else
+        echo "   ❌ Git 代理已关闭"
+    fi
+}
+
+# 快捷别名
+alias pon='proxy_on'           # 开启代理
+alias poff='proxy_off'         # 关闭代理
+alias pst='proxy_status'       # 查看代理状态
+alias ptest='proxy_test'       # 测试代理
+alias gpon='git_proxy_on'      # 开启 Git 代理
+alias gpoff='git_proxy_off'    # 关闭 Git 代理
+alias gpst='git_proxy_status'  # 查看 Git 代理状态
+
+# 自动检测并提示代理状态
+function check_proxy_on_startup() {
+    if [ -n "$http_proxy" ]; then
+        echo "🌐 检测到代理已开启: ${http_proxy}"
+    fi
+}
+
+# 启动时检查代理状态
+check_proxy_on_startup
+
+# =============================================================================
+# 常用快捷命令
+# =============================================================================
+
+# 文件和目录操作
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias ~='cd ~'
+alias -- -='cd -'
+
+# 文件查看和编辑
+alias cat='cat -n'          # 显示行号
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# 系统信息
+alias df='df -h'             # 人性化显示磁盘使用
+alias du='du -h'             # 人性化显示目录大小
+alias free='free -h'         # 人性化显示内存使用
+alias ps='ps auxf'           # 详细进程信息
+alias top='htop'             # 如果有 htop 就用 htop
+
+# 网络工具
+alias ping='ping -c 5'       # 默认 ping 5 次
+alias wget='wget -c'         # 支持断点续传
+
+# 安全操作
+alias rm='rm -i'             # 删除前确认
+
+# 快速查找
+alias f='find . -name'       # 快速查找文件
+alias h='history | grep'     # 在历史记录中搜索
+
+# 进程管理
+alias killall='pkill -f'     # 根据名称杀死进程
+alias ports='netstat -tulanp' # 查看端口占用
+
+echo "🎉 代理管理命令已加载！"
+echo "💡 快捷命令："
+echo "   pon/proxy_on     - 开启代理"
+echo "   poff/proxy_off   - 关闭代理"
+echo "   pst/proxy_status - 查看代理状态"
+echo "   ptest/proxy_test - 测试代理连接"
+echo "   gpon/git_proxy_on    - 开启 Git 代理"
+echo "   gpoff/git_proxy_off  - 关闭 Git 代理"
+echo "   gpst/git_proxy_status - 查看 Git 代理状态"
+echo "📝 常用快捷命令已加载: ll, .., f, h, ports 等"
