@@ -171,6 +171,102 @@ alias h='history | grep'     # 在历史记录中搜索
 alias killall='pkill -f'     # 根据名称杀死进程
 alias ports='netstat -tulanp' # 查看端口占用
 
+# =============================================================================
+# Git 用户快速切换
+# =============================================================================
+
+# Git 用户配置预设
+GIT_USER_WORK_NAME="zhaow"
+GIT_USER_WORK_EMAIL="zhaow@zhcomputing.com"
+
+GIT_USER_PERSONAL_NAME="zhaowei2025"
+GIT_USER_PERSONAL_EMAIL="zhaowei2025@protonmail.com"
+
+# 切换到工作账户
+function git_work() {
+    git config --global user.name "${GIT_USER_WORK_NAME}"
+    git config --global user.email "${GIT_USER_WORK_EMAIL}"
+    echo "🏢 已切换到工作 Git 账户："
+    echo "   姓名: ${GIT_USER_WORK_NAME}"
+    echo "   邮箱: ${GIT_USER_WORK_EMAIL}"
+}
+
+# 切换到个人账户
+function git_personal() {
+    git config --global user.name "${GIT_USER_PERSONAL_NAME}"
+    git config --global user.email "${GIT_USER_PERSONAL_EMAIL}"
+    echo "👤 已切换到个人 Git 账户："
+    echo "   姓名: ${GIT_USER_PERSONAL_NAME}"
+    echo "   邮箱: ${GIT_USER_PERSONAL_EMAIL}"
+}
+
+# 查看当前 Git 用户
+function git_whoami() {
+    local current_name=$(git config --global user.name)
+    local current_email=$(git config --global user.email)
+    
+    echo "📋 当前 Git 用户信息："
+    echo "   姓名: ${current_name:-未设置}"
+    echo "   邮箱: ${current_email:-未设置}"
+    
+    # 判断当前是哪个账户
+    if [[ "$current_name" == "$GIT_USER_WORK_NAME" && "$current_email" == "$GIT_USER_WORK_EMAIL" ]]; then
+        echo "   类型: 🏢 工作账户"
+    elif [[ "$current_name" == "$GIT_USER_PERSONAL_NAME" && "$current_email" == "$GIT_USER_PERSONAL_EMAIL" ]]; then
+        echo "   类型: 👤 个人账户"
+    else
+        echo "   类型: ❓ 其他账户"
+    fi
+}
+
+# 为当前仓库设置特定的 Git 用户（不影响全局配置）
+function git_local_work() {
+    git config user.name "${GIT_USER_WORK_NAME}"
+    git config user.email "${GIT_USER_WORK_EMAIL}"
+    echo "🏢 已为当前仓库设置工作账户："
+    echo "   姓名: ${GIT_USER_WORK_NAME}"
+    echo "   邮箱: ${GIT_USER_WORK_EMAIL}"
+}
+
+function git_local_personal() {
+    git config user.name "${GIT_USER_PERSONAL_NAME}"
+    git config user.email "${GIT_USER_PERSONAL_EMAIL}"
+    echo "👤 已为当前仓库设置个人账户："
+    echo "   姓名: ${GIT_USER_PERSONAL_NAME}"
+    echo "   邮箱: ${GIT_USER_PERSONAL_EMAIL}"
+}
+
+# 查看当前仓库的 Git 配置
+function git_local_whoami() {
+    if [[ -d .git ]]; then
+        local local_name=$(git config user.name)
+        local local_email=$(git config user.email)
+        local global_name=$(git config --global user.name)
+        local global_email=$(git config --global user.email)
+        
+        echo "📋 当前仓库 Git 配置："
+        echo "   本地姓名: ${local_name:-使用全局配置}"
+        echo "   本地邮箱: ${local_email:-使用全局配置}"
+        echo "   全局姓名: ${global_name:-未设置}"
+        echo "   全局邮箱: ${global_email:-未设置}"
+        
+        # 实际生效的配置
+        local effective_name="${local_name:-$global_name}"
+        local effective_email="${local_email:-$global_email}"
+        echo "   生效配置: ${effective_name} <${effective_email}>"
+    else
+        echo "❌ 当前目录不是 Git 仓库"
+    fi
+}
+
+# 快捷别名
+alias gwork='git_work'              # 切换到工作账户
+alias gpersonal='git_personal'      # 切换到个人账户
+alias gwho='git_whoami'             # 查看当前用户
+alias glwork='git_local_work'       # 当前仓库使用工作账户
+alias glpersonal='git_local_personal' # 当前仓库使用个人账户
+alias glwho='git_local_whoami'      # 查看当前仓库配置
+
 echo "🎉 代理管理命令已加载！"
 echo "💡 快捷命令："
 echo "   pon/proxy_on     - 开启代理"
@@ -181,3 +277,4 @@ echo "   gpon/git_proxy_on    - 开启 Git 代理"
 echo "   gpoff/git_proxy_off  - 关闭 Git 代理"
 echo "   gpst/git_proxy_status - 查看 Git 代理状态"
 echo "📝 常用快捷命令已加载: ll, .., f, h, ports 等"
+echo "👥 Git 用户切换命令: gwork, gpersonal, gwho, glwork, glpersonal, glwho"
