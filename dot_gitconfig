@@ -1,0 +1,18 @@
+[alias]
+        st = status
+        co = checkout
+        ci = commit
+        br = branch
+[user]
+	email = zhaowei2025@protonmail.com
+	name = zhaowei2025
+[http]
+        sslverify = false
+	proxy = http://10.0.11.100:7890
+[https]
+        sslverify = false
+	proxy = http://10.0.11.100:7890
+[color]
+        ui = false
+[url "ssh://"]
+        insteadOf = git://
