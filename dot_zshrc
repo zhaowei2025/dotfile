@@ -267,6 +267,90 @@ alias glwork='git_local_work'       # 当前仓库使用工作账户
 alias glpersonal='git_local_personal' # 当前仓库使用个人账户
 alias glwho='git_local_whoami'      # 查看当前仓库配置
 
+# =============================================================================
+# Chezmoi GitHub 同步快捷命令
+# =============================================================================
+
+# 同步配置到 GitHub
+function dotfiles_push() {
+    echo "📤 同步 dotfiles 到 GitHub..."
+    
+    # 确保使用个人账户
+    gpersonal
+    
+    # 添加所有更改
+    chezmoi git -- add .
+    
+    # 提交更改
+    local commit_msg="${1:-更新 dotfiles 配置}"
+    chezmoi git -- commit -m "$commit_msg"
+    
+    # 推送到 GitHub
+    chezmoi git -- push origin main || chezmoi git -- push --set-upstream origin main
+    
+    echo "✅ dotfiles 同步完成！"
+}
+
+# 从 GitHub 拉取配置
+function dotfiles_pull() {
+    echo "📥 从 GitHub 拉取 dotfiles..."
+    
+    # 确保使用个人账户
+    gpersonal
+    
+    # 拉取最新更改
+    chezmoi git -- pull origin main
+    
+    # 应用更改
+    chezmoi apply
+    
+    echo "✅ dotfiles 拉取完成！"
+}
+
+# 查看 dotfiles 状态
+function dotfiles_status() {
+    echo "📊 Dotfiles 状态："
+    echo ""
+    
+    # 显示当前 Git 用户
+    gwho
+    echo ""
+    
+    # 显示 chezmoi 状态
+    echo "📋 Chezmoi 状态："
+    chezmoi status
+    echo ""
+    
+    # 显示 Git 仓库状态
+    echo "📋 Git 仓库状态："
+    chezmoi cd && git status && cd -
+}
+
+# 初始化新机器的 dotfiles
+function dotfiles_init() {
+    echo "🚀 初始化 dotfiles 到新机器..."
+    
+    # 如果已经初始化，先删除
+    if [ -d "$HOME/.local/share/chezmoi" ]; then
+        echo "⚠️  检测到已存在的 chezmoi 配置，正在备份..."
+        mv "$HOME/.local/share/chezmoi" "$HOME/.local/share/chezmoi.backup.$(date +%Y%m%d_%H%M%S)"
+    fi
+    
+    # 克隆并初始化
+    chezmoi init https://github.com/zhaowei2025/dotfile.git
+    
+    # 应用配置
+    chezmoi apply
+    
+    echo "✅ dotfiles 初始化完成！"
+}
+
+# 快捷别名
+alias dfpush='dotfiles_push'        # 推送配置
+alias dfpull='dotfiles_pull'        # 拉取配置
+alias dfstatus='dotfiles_status'    # 查看状态
+alias dfinit='dotfiles_init'        # 初始化新机器
+
 echo "🎉 代理管理命令已加载！"
 echo "💡 快捷命令："
 echo "   pon/proxy_on     - 开启代理"
@@ -278,3 +362,4 @@ echo "   gpoff/git_proxy_off  - 关闭 Git 代理"
 echo "   gpst/git_proxy_status - 查看 Git 代理状态"
 echo "📝 常用快捷命令已加载: ll, .., f, h, ports 等"
 echo "👥 Git 用户切换命令: gwork, gpersonal, gwho, glwork, glpersonal, glwho"
+echo "📦 Dotfiles 同步命令: dfpush, dfpull, dfstatus, dfinit"
