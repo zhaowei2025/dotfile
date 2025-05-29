@@ -3,4 +3,8 @@ encrypted_*.asc
 *-key-*.asc
 *.asc
 
+# 忽略加密生成的目标文件
+.github-token.env
+.env.private
+
 # 如果需要手动处理，使用 chezmoi decrypt 命令 
