@@ -521,4 +521,219 @@ chezmoi cd && git log --oneline -n 10
 
 ## 📄 许可证
 
-此配置基于 MIT 许可证开源，欢迎自由使用和修改。 
+此配置基于 MIT 许可证开源，欢迎自由使用和修改。
+
+## 🔐 Token 同步解决方案
+
+由于安全考虑，敏感信息（API密钥、tokens）不会存储在Git仓库中。我们提供了多种安全的同步方案：
+
+### 方案1：交互式设置（推荐新手）
+
+使用综合的token管理器：
+
+```bash
+# 运行token管理器
+~/.local/share/chezmoi/scripts/token-manager.sh
+```
+
+功能包括：
+- 🆕 初始设置向导
+- 📝 编辑tokens
+- 💾 自动备份
+- 🔒 加密存储
+- 📋 状态检查
+
+### 方案2：快速设置
+
+```bash
+# 运行快速设置脚本
+~/.local/share/chezmoi/scripts/setup-tokens.sh
+```
+
+这个脚本会：
+- 交互式收集所有需要的tokens
+- 自动写入到安全的配置文件
+- 设置正确的文件权限
+- 自动应用chezmoi配置
+
+### 方案3：加密同步
+
+对于多机器环境，可以使用加密方式：
+
+```bash
+# 在源机器上加密tokens
+~/.local/share/chezmoi/scripts/sync-tokens-encrypted.sh encrypt
+
+# 将 ~/.tokens.enc 复制到新机器（通过云盘、U盘等）
+
+# 在新机器上解密
+~/.local/share/chezmoi/scripts/sync-tokens-encrypted.sh decrypt
+```
+
+### 方案4：手动配置
+
+直接编辑token文件：
+
+```bash
+# 创建token配置文件
+cat > ~/.env.tokens << 'EOF'
+export GITHUB_TOKEN="your_github_token"
+export DEEPSEEK_API_KEY="your_deepseek_key"
+export ALI_DEEPSEEK_API_KEY="your_ali_key"
+export ZHIHE_API_KEY="your_zhihe_key"
+EOF
+
+# 设置安全权限
+chmod 600 ~/.env.tokens
+
+# 添加到shell配置
+echo 'source ~/.env.tokens' >> ~/.zshrc
+
+# 应用chezmoi配置
+chezmoi apply
+```
+
+## 📋 需要配置的 Tokens
+
+| Token | 用途 | 获取方式 |
+|-------|------|----------|
+| `GITHUB_TOKEN` | GitHub API访问 | GitHub Settings → Developer settings → Personal access tokens |
+| `DEEPSEEK_API_KEY` | DeepSeek AI API | DeepSeek 官网申请 |
+| `ALI_DEEPSEEK_API_KEY` | 阿里云深度求索 | 阿里云控制台 |
+| `ZHIHE_API_KEY` | 智和API | 智和平台申请 |
+
+## 🛠️ 管理的工具
+
+### 开发工具
+- **nvim** (0.11.1) - 现代化文本编辑器
+- **fd** (10.1.0) - 快速文件查找
+- **ripgrep** (14.1.1) - 快速文本搜索
+- **clangd** (18.1.3) - C/C++ LSP服务器
+- **clang-format** (18.1.3) - C/C++ 代码格式化
+
+### Shell 增强
+- **zsh** - 现代化shell
+- **oh-my-zsh** - Zsh框架
+- **Powerlevel10k** - 美观的shell主题
+
+## 🔄 常用命令
+
+### Dotfiles 管理
+```bash
+dfpush "message"    # 推送dotfiles更新
+dfpull              # 拉取最新配置
+dfstatus            # 查看状态
+dfedit              # 编辑配置
+dfquick "msg"       # 快速提交推送
+```
+
+### 代理管理
+```bash
+pon                 # 开启代理
+poff                # 关闭代理
+pst                 # 代理状态
+ptest               # 测试代理
+```
+
+### Git 用户切换
+```bash
+gwork               # 切换到工作用户
+gpersonal           # 切换到个人用户
+gwho                # 查看当前用户
+```
+
+### 工具更新
+```bash
+# 更新所有工具到最新版本
+chezmoi apply
+
+# 手动运行工具更新脚本
+bash ~/.local/share/chezmoi/run_onchange_update-bin-tools.sh.tmpl
+```
+
+## 📁 目录结构
+
+```
+~/.local/share/chezmoi/
+├── scripts/                    # 部署和管理脚本
+│   ├── install.sh             # 一键安装脚本
+│   ├── setup-tokens.sh        # Token设置向导
+│   ├── token-manager.sh       # 综合Token管理器
+│   └── sync-tokens-encrypted.sh # 加密同步工具
+├── dot_config/
+│   └── bin-tools/
+│       └── versions.toml      # 工具版本配置
+├── dot_zshrc                  # Zsh配置
+├── private_dot_env.private.tmpl # 环境变量模板
+├── run_onchange_update-bin-tools.sh.tmpl # 工具更新脚本
+├── SECURITY.md               # 安全配置指南
+└── README.md                # 说明文档
+```
+
+## 🔒 安全最佳实践
+
+1. **永不提交明文密钥** - 所有敏感信息都通过环境变量管理
+2. **使用强密码** - 为加密文件设置强密码
+3. **定期轮换** - 定期更新API密钥和tokens
+4. **权限控制** - 确保敏感文件权限为600
+5. **备份安全** - 定期备份但不包含敏感信息
+
+## 🆘 故障排除
+
+### Token相关问题
+
+```bash
+# 检查token状态
+~/.local/share/chezmoi/scripts/token-manager.sh  # 选择选项7
+
+# 重新设置所有tokens
+~/.local/share/chezmoi/scripts/setup-tokens.sh
+
+# 查看环境变量是否正确加载
+echo $GITHUB_TOKEN | cut -c1-8
+```
+
+### 工具安装问题
+
+```bash
+# 检查版本配置
+cat ~/.config/bin-tools/versions.toml
+
+# 手动重新安装工具
+chezmoi apply --force
+
+# 查看详细日志
+chezmoi apply -v
+```
+
+### 权限问题
+
+```bash
+# 修复文件权限
+chmod 600 ~/.env.tokens ~/.env.private
+chmod 755 ~/.local/share/chezmoi/scripts/*.sh
+```
+
+## 🤝 贡献
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 开启 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🙋‍♂️ 支持
+
+如果遇到问题或有建议，请：
+
+1. 查看 [SECURITY.md](SECURITY.md) 了解安全配置
+2. 运行诊断脚本检查配置
+3. 提交 Issue 描述问题
+
+---
+
+**💡 提示：** 首次部署建议使用 token-manager.sh 进行交互式设置，这样可以确保所有配置都正确设置。 
