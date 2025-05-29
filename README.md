@@ -331,4 +331,194 @@ chezmoi add ~/.zshrc
 
 ---
 
-⭐ 如果这个项目对你有帮助，请考虑给个 Star！ 
+⭐ 如果这个项目对你有帮助，请考虑给个 Star！
+
+# 我的开发环境配置 (dotfiles)
+
+这是我的跨平台开发环境配置，使用 [chezmoi](https://www.chezmoi.io/) 管理，支持快速部署到新机器。
+
+## 🚀 一键部署到新机器
+
+### 方法1：使用安装脚本（推荐）
+```bash
+# 设置 GitHub token 环境变量
+export GITHUB_TOKEN="your_github_token"
+
+# 运行一键安装脚本
+curl -fsSL https://raw.githubusercontent.com/zhaowei2025/dotfile/main/scripts/install.sh | bash
+```
+
+### 方法2：手动安装
+```bash
+# 1. 安装 chezmoi
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
+
+# 2. 初始化配置
+chezmoi init https://github.com/zhaowei2025/dotfile.git
+
+# 3. 应用配置
+chezmoi apply
+
+# 4. 切换到 zsh
+chsh -s $(which zsh)
+```
+
+## 🔧 包含的工具和配置
+
+### 核心工具
+- **Neovim** - 现代化的文本编辑器
+- **fd** - 快速文件查找工具
+- **ripgrep (rg)** - 快速文本搜索
+- **clangd** - C/C++ 语言服务器
+- **clang-format** - 代码格式化工具
+
+### Shell 配置
+- **zsh** - 强化的 shell 环境
+- 彩色提示符
+- 智能补全和历史记录
+- 丰富的别名和快捷命令
+
+### 代理管理
+- `pon` / `poff` - 开启/关闭代理
+- `pst` - 查看代理状态
+- `ptest` - 测试代理连接
+- `gpon` / `gpoff` - Git 代理管理
+
+### Git 用户管理
+- `gwork` - 切换到工作账户
+- `gpersonal` - 切换到个人账户
+- `gwho` - 查看当前用户
+- `glwork` / `glpersonal` - 仓库级用户切换
+
+## 📦 Dotfiles 管理命令
+
+### 基本同步
+```bash
+dfpush "提交消息"    # 推送配置到 GitHub
+dfpull              # 从 GitHub 拉取最新配置
+dfstatus            # 查看配置状态
+dfinit              # 在新机器上初始化配置
+```
+
+### 高级操作
+```bash
+dfedit ~/.zshrc     # 编辑配置并自动推送
+dfquick "快速保存"  # 快速提交所有更改
+```
+
+### Chezmoi 原生命令
+```bash
+chezmoi edit <file>     # 编辑配置文件
+chezmoi apply           # 应用配置更改
+chezmoi status          # 查看配置状态
+chezmoi diff            # 查看配置差异
+chezmoi cd              # 进入 chezmoi 源目录
+```
+
+## 🔐 GitHub Token 配置
+
+为了实现自动认证和推送，需要配置 GitHub Personal Access Token：
+
+### 1. 创建 Token
+1. 访问 [GitHub Settings > Personal access tokens](https://github.com/settings/tokens)
+2. 点击 "Generate new token (classic)"
+3. 设置权限：勾选 `repo` 和 `workflow`
+4. 复制生成的 token
+
+### 2. 配置 Token
+```bash
+# 方法1：环境变量（推荐）
+export GITHUB_TOKEN="your_github_token"
+
+# 方法2：写入私有配置文件
+echo 'export GITHUB_TOKEN="your_github_token"' >> ~/.env.private
+```
+
+### 3. Token 安全性
+- Token 存储在 `~/.env.private` 文件中，不会被 git 追踪
+- 使用 HTTPS 而非 SSH，避免密钥管理复杂性
+- Token 支持精细权限控制
+
+## 📁 目录结构
+
+```
+~/.local/share/chezmoi/          # chezmoi 源目录
+├── dot_zshrc                    # zsh 配置
+├── dot_gitconfig                # Git 配置
+├── private_dot_env.private      # 私有环境变量（不被 git 追踪）
+├── dot_config/
+│   ├── nvim/                    # Neovim 配置
+│   └── bin-tools/               # 二进制工具版本管理
+├── scripts/
+│   └── install.sh               # 一键安装脚本
+└── README.md                    # 本文件
+```
+
+## 🛠 自定义配置
+
+### 修改代理设置
+编辑 `~/.zshrc` 中的代理配置：
+```bash
+PROXY_HOST="your-proxy-host"
+PROXY_PORT="your-proxy-port"
+```
+
+### 修改 Git 用户信息
+编辑 `~/.zshrc` 中的用户配置：
+```bash
+GIT_USER_WORK_NAME="your-work-name"
+GIT_USER_WORK_EMAIL="your-work-email"
+GIT_USER_PERSONAL_NAME="your-personal-name"
+GIT_USER_PERSONAL_EMAIL="your-personal-email"
+```
+
+### 添加私有配置
+在 `~/.env.private` 中添加不想公开的配置：
+```bash
+export API_KEY="your-secret-key"
+export DATABASE_URL="your-database-url"
+```
+
+## 🔄 工作流程
+
+### 日常使用
+1. **修改配置**：`dfedit ~/.zshrc`
+2. **快速保存**：`dfquick`
+3. **同步配置**：`dfpush "描述更改"`
+
+### 新机器部署
+1. **一键安装**：使用安装脚本
+2. **手动微调**：根据具体环境调整
+3. **验证功能**：测试各种工具和命令
+
+### 版本管理
+- 所有配置都通过 Git 管理
+- 支持分支和回滚
+- 自动备份现有配置
+
+## 🆘 故障排除
+
+### 常见问题
+1. **推送失败**：检查 GITHUB_TOKEN 是否正确设置
+2. **配置未生效**：运行 `chezmoi apply` 重新应用
+3. **权限问题**：确保 token 有正确的仓库权限
+
+### 重置配置
+```bash
+# 备份并重新初始化
+mv ~/.local/share/chezmoi ~/.local/share/chezmoi.backup
+dfinit
+```
+
+### 查看日志
+```bash
+# 查看 chezmoi 详细输出
+chezmoi apply -v
+
+# 查看 git 状态
+chezmoi cd && git log --oneline -n 10
+```
+
+## 📄 许可证
+
+此配置基于 MIT 许可证开源，欢迎自由使用和修改。 

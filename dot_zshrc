@@ -271,6 +271,15 @@ alias glwho='git_local_whoami'      # 查看当前仓库配置
 # Chezmoi GitHub 同步快捷命令
 # =============================================================================
 
+# 配置 GitHub token 到远程仓库
+function setup_git_token() {
+    if [[ -n "$GITHUB_TOKEN" ]]; then
+        cd ~/.local/share/chezmoi
+        git remote set-url origin "https://${GITHUB_TOKEN}@github.com/zhaowei2025/dotfile.git"
+        cd -
+    fi
+}
+
 # 同步配置到 GitHub
 function dotfiles_push() {
     echo "📤 同步 dotfiles 到 GitHub..."
@@ -278,11 +287,14 @@ function dotfiles_push() {
     # 确保使用个人账户
     gpersonal
     
+    # 设置 token 认证
+    setup_git_token
+    
     # 添加所有更改
     chezmoi git -- add .
     
     # 提交更改
-    local commit_msg="${1:-更新 dotfiles 配置}"
+    local commit_msg="${1:-更新 dotfiles 配置 $(date '+%Y-%m-%d %H:%M:%S')}"
     chezmoi git -- commit -m "$commit_msg"
     
     # 推送到 GitHub
@@ -297,6 +309,9 @@ function dotfiles_pull() {
     
     # 确保使用个人账户
     gpersonal
+    
+    # 设置 token 认证
+    setup_git_token
     
     # 拉取最新更改
     chezmoi git -- pull origin main
@@ -336,8 +351,12 @@ function dotfiles_init() {
         mv "$HOME/.local/share/chezmoi" "$HOME/.local/share/chezmoi.backup.$(date +%Y%m%d_%H%M%S)"
     fi
     
-    # 克隆并初始化
-    chezmoi init https://github.com/zhaowei2025/dotfile.git
+    # 使用 token 克隆并初始化
+    if [[ -n "$GITHUB_TOKEN" ]]; then
+        chezmoi init "https://${GITHUB_TOKEN}@github.com/zhaowei2025/dotfile.git"
+    else
+        chezmoi init "https://github.com/zhaowei2025/dotfile.git"
+    fi
     
     # 应用配置
     chezmoi apply
@@ -345,11 +364,32 @@ function dotfiles_init() {
     echo "✅ dotfiles 初始化完成！"
 }
 
+# 一键编辑并推送配置
+function dotfiles_edit() {
+    local file="${1:-~/.zshrc}"
+    echo "✏️  编辑配置文件: $file"
+    chezmoi edit "$file"
+    
+    echo "📤 自动提交并推送更改..."
+    dfpush "编辑 $file"
+}
+
+# 快速提交当前所有更改
+function dotfiles_quick_save() {
+    local msg="${1:-快速保存 $(date '+%Y-%m-%d %H:%M:%S')}"
+    echo "💾 快速保存所有更改..."
+    
+    chezmoi git -- add .
+    chezmoi git -- commit -m "$msg" && dfpush "$msg"
+}
+
 # 快捷别名
 alias dfpush='dotfiles_push'        # 推送配置
 alias dfpull='dotfiles_pull'        # 拉取配置
 alias dfstatus='dotfiles_status'    # 查看状态
 alias dfinit='dotfiles_init'        # 初始化新机器
+alias dfedit='dotfiles_edit'        # 一键编辑并推送配置
+alias dfquick='dotfiles_quick_save'  # 快速提交当前所有更改
 
 echo "🎉 代理管理命令已加载！"
 echo "💡 快捷命令："
@@ -362,7 +402,7 @@ echo "   gpoff/git_proxy_off  - 关闭 Git 代理"
 echo "   gpst/git_proxy_status - 查看 Git 代理状态"
 echo "📝 常用快捷命令已加载: ll, .., f, h, ports 等"
 echo "👥 Git 用户切换命令: gwork, gpersonal, gwho, glwork, glpersonal, glwho"
-echo "📦 Dotfiles 同步命令: dfpush, dfpull, dfstatus, dfinit"
+echo "📦 Dotfiles 同步命令: dfpush, dfpull, dfstatus, dfinit, dfedit, dfquick"
 
 # =============================================================================
 # 环境变量设置
