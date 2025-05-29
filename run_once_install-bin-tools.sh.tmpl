@@ -176,7 +176,8 @@ fi
 # Install lazygit
 echo "🔀 Installing lazygit..."
 LAZYGIT_VERSION="v0.51.1"
-LAZYGIT_URL="https://github.com/jesseduffield/lazygit/releases/download/${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+LAZYGIT_VERSION_NUM=${LAZYGIT_VERSION#v}  # Remove 'v' prefix for filename
+LAZYGIT_URL="https://github.com/jesseduffield/lazygit/releases/download/${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION_NUM}_Linux_x86_64.tar.gz"
 install_from_archive "lazygit" "$LAZYGIT_URL" "lazygit"
 
 # Add PATH to .zshrc if not already present
