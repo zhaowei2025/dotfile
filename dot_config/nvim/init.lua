@@ -710,9 +710,6 @@ require('lazy').setup({
         auto_update = true,
         run_on_start = true,
         start_delay = 3000,
-        registries = {
-          "github:mason-org/mason-registry",
-        },
       }
 
       require('mason-lspconfig').setup {
@@ -723,9 +720,6 @@ require('lazy').setup({
           "tsserver",
         },
         automatic_installation = true,
-        registries = {
-          "github:mason-org/mason-registry",
-        },
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
