@@ -41,8 +41,8 @@
 ├── 💾 backup-dotfiles.sh                           # 配置备份脚本
 ├── 🔧 dot_gitconfig                               # Git 全局配置
 ├── 🐚 dot_zshrc                                   # Zsh Shell 配置
-├── 🚀 run_once_install-bin-tools.sh.tmpl         # 二进制工具安装脚本
-├── 🔄 run_onchange_update-bin-tools.sh.tmpl      # 工具更新脚本
+├── 🚀 install-bin-tools.sh         # 二进制工具安装脚本
+├── 🔄 update-bin-tools.sh      # 工具更新脚本
 │
 ├── 📁 dot_local/bin/
 │   └── 🛠️ executable_manage-tools                # 工具管理脚本
@@ -247,7 +247,7 @@ PROXY_PORT="your_proxy_port"
 ### 添加新的二进制工具
 
 1. 在 `versions.toml` 中添加配置
-2. 在 `run_once_install-bin-tools.sh.tmpl` 中添加安装逻辑
+2. 在 `install-bin-tools.sh` 中添加安装逻辑
 3. 在 `executable_manage-tools` 中添加管理支持
 
 ## 🎯 常用命令速查
@@ -681,7 +681,7 @@ gwho                # 查看当前用户
 chezmoi apply
 
 # 手动运行工具更新脚本
-bash ~/.local/share/chezmoi/run_onchange_update-bin-tools.sh.tmpl
+bash ~/.local/share/chezmoi/update-bin-tools.sh
 ```
 
 ## 📁 目录结构
@@ -698,75 +698,7 @@ bash ~/.local/share/chezmoi/run_onchange_update-bin-tools.sh.tmpl
 │       └── versions.toml      # 工具版本配置
 ├── dot_zshrc                  # Zsh配置
 ├── private_dot_env.private.tmpl # 环境变量模板
-├── run_onchange_update-bin-tools.sh.tmpl # 工具更新脚本
+├── update-bin-tools.sh # 工具更新脚本
 ├── SECURITY.md               # 安全配置指南
 └── README.md                # 说明文档
 ```
-
-## 🔒 安全最佳实践
-
-1. **永不提交明文密钥** - 所有敏感信息都通过环境变量管理
-2. **使用强密码** - 为加密文件设置强密码
-3. **定期轮换** - 定期更新API密钥和tokens
-4. **权限控制** - 确保敏感文件权限为600
-5. **备份安全** - 定期备份但不包含敏感信息
-
-## 🆘 故障排除
-
-### Token相关问题
-
-```bash
-# 检查token状态
-~/.local/share/chezmoi/scripts/token-manager.sh  # 选择选项7
-
-# 重新设置所有tokens
-~/.local/share/chezmoi/scripts/setup-tokens.sh
-
-# 查看环境变量是否正确加载
-echo $GITHUB_TOKEN | cut -c1-8
-```
-
-### 工具安装问题
-
-```bash
-# 检查版本配置
-cat ~/.config/bin-tools/versions.toml
-
-# 手动重新安装工具
-chezmoi apply --force
-
-# 查看详细日志
-chezmoi apply -v
-```
-
-### 权限问题
-
-```bash
-# 修复文件权限
-chmod 600 ~/.env.tokens ~/.env.private
-chmod 755 ~/.local/share/chezmoi/scripts/*.sh
-```
-
-## 🤝 贡献
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 开启 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙋‍♂️ 支持
-
-如果遇到问题或有建议，请：
-
-1. 查看 [SECURITY.md](SECURITY.md) 了解安全配置
-2. 运行诊断脚本检查配置
-3. 提交 Issue 描述问题
-
----
-
-**💡 提示：** 首次部署建议使用 token-manager.sh 进行交互式设置，这样可以确保所有配置都正确设置。 

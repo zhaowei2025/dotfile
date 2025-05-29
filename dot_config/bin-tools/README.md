@@ -15,8 +15,8 @@
 
 ```
 ~/.local/share/chezmoi/
-├── run_once_install-bin-tools.sh.tmpl          # 初始安装脚本
-├── run_onchange_update-bin-tools.sh.tmpl       # 配置变更时的更新脚本
+├── install-bin-tools.sh          # 初始安装脚本
+├── update-bin-tools.sh       # 配置变更时的更新脚本
 ├── dot_local/bin/executable_manage-tools       # 管理工具脚本
 └── dot_config/bin-tools/
     ├── versions.toml                            # 版本配置文件
@@ -116,8 +116,8 @@ chezmoi diff
 
 ## 工作原理
 
-1. **初始安装**: `run_once_install-bin-tools.sh.tmpl` 在首次运行时安装所有工具
-2. **配置监控**: `run_onchange_update-bin-tools.sh.tmpl` 监控 `versions.toml` 的变化
+1. **初始安装**: `install-bin-tools.sh` 在首次运行时安装所有工具
+2. **配置监控**: `update-bin-tools.sh` 监控 `versions.toml` 的变化
 3. **版本管理**: 通过修改配置文件来控制工具版本
 4. **自动下载**: 脚本自动从 GitHub releases 下载对应架构的二进制文件
 5. **备份机制**: 更新前自动备份现有版本

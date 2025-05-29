@@ -117,12 +117,12 @@ echo $EDITOR
 | `dot_local/bin/` | `~/.local/bin/` | 755/755 |
 
 ### 脚本执行顺序
-1. **run_once_install-bin-tools.sh.tmpl**
+1. **install-bin-tools.sh**
    - 检测系统架构和 glibc 版本
    - 下载并安装二进制工具 (fd, rg, nvim, clangd)
    - 创建符号链接和设置权限
 
-2. **run_onchange_update-bin-tools.sh.tmpl**
+2. **update-bin-tools.sh**
    - 当 `versions.toml` 变化时触发
    - 更新现有工具到新版本
    - 备份旧版本并清理
