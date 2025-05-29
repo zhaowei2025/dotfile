@@ -1,5 +1,5 @@
 source /usr/share/zsh/config/zshrc
-export PROMPT='$CYAN%n@$YELLOW$(hostname):$FG[039]$GREEN$(_fish_collapsed_pwd)%f > '
+export PROMPT='%F{cyan}%n@%F{yellow}%m:%F{green}%~%f > '
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.local/clangd/clangd_19.1.2/bin:$PATH"
 
