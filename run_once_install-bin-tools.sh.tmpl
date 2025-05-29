@@ -105,7 +105,7 @@ try_package_install() {
         if sudo apt update -qq && sudo apt install -y "$package_name" >/dev/null 2>&1; then
             # Handle Ubuntu naming quirks
             if [[ "$tool_name" == "fd" && ! -f "$BIN_DIR/fd" ]]; then
-                ln -sf "$(which fdfind)" "$BIN_DIR/fd" 2>/dev/null || true
+                ln -sf "$(which fd-find)" "$BIN_DIR/fd" 2>/dev/null || true
             fi
             if [[ "$tool_name" == "bat" && ! -f "$BIN_DIR/bat" && -x "$(which batcat)" ]]; then
                 ln -sf "$(which batcat)" "$BIN_DIR/bat" 2>/dev/null || true
