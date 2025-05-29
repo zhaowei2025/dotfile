@@ -2,26 +2,26 @@
 # 此文件使用 private_ 前缀，具有严格的权限控制 (600)
 
 # API 密钥 - 使用环境变量模板
-{{- if .ALI_DEEPSEEK_API_KEY }}
+{{- if hasKey . "ALI_DEEPSEEK_API_KEY" }}
 export ALI_DEEPSEEK_API_KEY="{{ .ALI_DEEPSEEK_API_KEY }}"
 {{- else }}
 # export ALI_DEEPSEEK_API_KEY="your_ali_deepseek_api_key"
 {{- end }}
 
-{{- if .DEEPSEEK_API_KEY }}
+{{- if hasKey . "DEEPSEEK_API_KEY" }}
 export DEEPSEEK_API_KEY="{{ .DEEPSEEK_API_KEY }}"
 {{- else }}
 # export DEEPSEEK_API_KEY="your_deepseek_api_key"
 {{- end }}
 
-{{- if .ZHIHE_API_KEY }}
+{{- if hasKey . "ZHIHE_API_KEY" }}
 export ZHIHE_API_KEY="{{ .ZHIHE_API_KEY }}"
 {{- else }}
 # export ZHIHE_API_KEY="your_zhihe_api_key"
 {{- end }}
 
 # GitHub Personal Access Token - 优先使用环境变量，否则使用加密文件
-{{- if .GITHUB_TOKEN }}
+{{- if hasKey . "GITHUB_TOKEN" }}
 export GITHUB_TOKEN="{{ .GITHUB_TOKEN }}"
 {{- else }}
 # 从加密文件加载 GitHub Token
