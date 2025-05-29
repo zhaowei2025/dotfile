@@ -31,6 +31,7 @@
 | rg (ripgrep) | 快速的文本搜索工具 | [BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep) |
 | nvim (neovim) | 现代化的 vim 编辑器 | [neovim/neovim](https://github.com/neovim/neovim) |
 | clangd | C/C++ 语言服务器 | [clangd/clangd](https://github.com/clangd/clangd) |
+| lazygit | 终端下的 Git UI | [jesseduffield/lazygit](https://github.com/jesseduffield/lazygit) |
 
 ## 使用方法
 
@@ -93,6 +94,9 @@ version = "latest"
 
 [clangd]
 version = "19.1.2"
+
+[lazygit]
+version = "v0.51.1"
 ```
 
 保存后，chezmoi 会自动检测变更并更新工具。
@@ -150,7 +154,7 @@ chmod +x ~/.local/bin/manage-tools
 ### 清理和重置
 完全重置所有工具：
 ```bash
-rm -rf ~/.local/bin/{fd,rg,nvim,clangd}
+rm -rf ~/.local/bin/{fd,rg,nvim,clangd,lazygit}
 chezmoi apply
 ```
 

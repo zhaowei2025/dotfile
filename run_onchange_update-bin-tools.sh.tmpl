@@ -54,7 +54,7 @@ cleanup_backups() {
 echo "🔍 Checking which tools need updating..."
 
 tools_to_update=()
-for tool in fd rg nvim clangd; do
+for tool in fd rg nvim clangd lazygit; do
     if [[ ! -f "$BIN_DIR/$tool" ]] && [[ ! -L "$BIN_DIR/$tool" ]]; then
         echo "❌ $tool: missing, will install"
         tools_to_update+=("$tool")
@@ -81,7 +81,7 @@ echo "✅ Binary tools update check completed!"
 echo "💡 Tools will be reinstalled when chezmoi finishes applying changes"
 
 # Clean old backups for all tools
-for tool in fd rg nvim clangd; do
+for tool in fd rg nvim clangd lazygit; do
     cleanup_backups "$tool"
 done
 

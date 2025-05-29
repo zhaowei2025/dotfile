@@ -167,6 +167,12 @@ else
     echo "✓ clangd already exists, skipping..."
 fi
 
+# Install lazygit
+echo "🔀 Installing lazygit..."
+LAZYGIT_VERSION="v0.51.1"
+LAZYGIT_URL="https://github.com/jesseduffield/lazygit/releases/download/${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+install_from_archive "lazygit" "$LAZYGIT_URL" "lazygit"
+
 # Add PATH to .zshrc if not already present
 echo "🔧 Updating PATH configuration..."
 if ! grep -q "\.local/bin" ~/.zshrc 2>/dev/null; then
@@ -186,7 +192,7 @@ echo "🔧 Please restart your terminal or run: source ~/.zshrc"
 # Verify installations
 echo ""
 echo "🔍 Verifying installations:"
-for tool in fd rg nvim clangd; do
+for tool in fd rg nvim clangd lazygit; do
     if command -v "$tool" >/dev/null 2>&1; then
         version=$("$tool" --version 2>/dev/null | head -n1 || echo "version info not available")
         echo "✅ $tool: $version"
