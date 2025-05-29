@@ -1,0 +1,6 @@
+# 忽略加密文件，避免在 apply 时自动处理
+encrypted_*.asc
+*-key-*.asc
+*.asc
+
+# 如果需要手动处理，使用 chezmoi decrypt 命令 
