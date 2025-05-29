@@ -1,0 +1,247 @@
+#!/bin/bash
+
+# Binary tools management script for chezmoi
+# Usage: manage-tools [command] [tool]
+
+set -euo pipefail
+
+BIN_DIR="$HOME/.local/bin"
+CONFIG_DIR="$HOME/.config/bin-tools"
+CHEZMOI_SOURCE="$(chezmoi source-path)"
+
+show_help() {
+    cat << EOF
+Binary Tools Manager for chezmoi
+
+Usage: manage-tools [command] [tool]
+
+Commands:
+    list                List all managed tools and their status
+    install [tool]      Install or reinstall a specific tool
+    remove [tool]       Remove a specific tool
+    update [tool]       Update a specific tool (or all if no tool specified)
+    status [tool]       Show status of a specific tool
+    backup [tool]       Create backup of a specific tool
+    restore [tool]      Restore tool from latest backup
+    clean               Clean old backups
+    help                Show this help message
+
+Tools: fd, rg, nvim, clangd
+
+Examples:
+    manage-tools list
+    manage-tools install fd
+    manage-tools update
+    manage-tools status nvim
+    manage-tools backup clangd
+EOF
+}
+
+list_tools() {
+    echo "📋 Managed Binary Tools Status:"
+    echo "================================"
+    
+    for tool in fd rg nvim clangd; do
+        local tool_path="$BIN_DIR/$tool"
+        if [[ -f "$tool_path" ]] || [[ -L "$tool_path" ]]; then
+            local version=""
+            case $tool in
+                fd|rg|nvim)
+                    version=$("$tool" --version 2>/dev/null | head -n1 || echo "unknown")
+                    ;;
+                clangd)
+                    version=$("$tool" --version 2>/dev/null | head -n1 || echo "unknown")
+                    ;;
+            esac
+            echo "✅ $tool: installed ($version)"
+        else
+            echo "❌ $tool: not installed"
+        fi
+    done
+    
+    echo ""
+    echo "📍 Installation directory: $BIN_DIR"
+    echo "⚙️  Configuration: $CONFIG_DIR/versions.toml"
+}
+
+install_tool() {
+    local tool="$1"
+    echo "🔧 Installing $tool..."
+    
+    # Remove existing tool
+    rm -f "$BIN_DIR/$tool"
+    
+    # Run chezmoi apply to trigger installation
+    chezmoi apply
+    
+    if [[ -f "$BIN_DIR/$tool" ]] || [[ -L "$BIN_DIR/$tool" ]]; then
+        echo "✅ $tool installed successfully"
+    else
+        echo "❌ Failed to install $tool"
+        return 1
+    fi
+}
+
+remove_tool() {
+    local tool="$1"
+    local tool_path="$BIN_DIR/$tool"
+    
+    if [[ -f "$tool_path" ]] || [[ -L "$tool_path" ]]; then
+        echo "🗑️  Removing $tool..."
+        rm -f "$tool_path"
+        echo "✅ $tool removed"
+    else
+        echo "ℹ️  $tool is not installed"
+    fi
+}
+
+update_tools() {
+    echo "🔄 Updating binary tools..."
+    chezmoi apply
+    echo "✅ Update completed"
+}
+
+show_status() {
+    local tool="$1"
+    local tool_path="$BIN_DIR/$tool"
+    
+    echo "📊 Status for $tool:"
+    echo "==================="
+    
+    if [[ -f "$tool_path" ]] || [[ -L "$tool_path" ]]; then
+        echo "Status: ✅ Installed"
+        echo "Path: $tool_path"
+        
+        if [[ -L "$tool_path" ]]; then
+            echo "Type: Symlink"
+            echo "Target: $(readlink "$tool_path")"
+        else
+            echo "Type: Binary"
+            echo "Size: $(du -h "$tool_path" | cut -f1)"
+        fi
+        
+        local version=""
+        case $tool in
+            fd|rg|nvim|clangd)
+                version=$("$tool" --version 2>/dev/null | head -n1 || echo "unknown")
+                ;;
+        esac
+        echo "Version: $version"
+        
+        # Check for backups
+        local backups=$(ls "$tool_path.backup."* 2>/dev/null | wc -l || echo "0")
+        echo "Backups: $backups"
+    else
+        echo "Status: ❌ Not installed"
+    fi
+}
+
+backup_tool() {
+    local tool="$1"
+    local tool_path="$BIN_DIR/$tool"
+    
+    if [[ -f "$tool_path" ]]; then
+        local backup_path="$tool_path.backup.$(date +%Y%m%d_%H%M%S)"
+        cp "$tool_path" "$backup_path"
+        echo "📦 Backup created: $backup_path"
+    else
+        echo "❌ $tool is not installed, cannot create backup"
+        return 1
+    fi
+}
+
+restore_tool() {
+    local tool="$1"
+    local tool_path="$BIN_DIR/$tool"
+    local backup_file=$(ls "$tool_path.backup."* 2>/dev/null | tail -n1 || echo "")
+    
+    if [[ -n "$backup_file" && -f "$backup_file" ]]; then
+        echo "🔄 Restoring $tool from $backup_file..."
+        cp "$backup_file" "$tool_path"
+        chmod +x "$tool_path"
+        echo "✅ $tool restored successfully"
+    else
+        echo "❌ No backup found for $tool"
+        return 1
+    fi
+}
+
+clean_backups() {
+    echo "🧹 Cleaning old backups..."
+    local cleaned=0
+    
+    for tool in fd rg nvim clangd; do
+        local tool_path="$BIN_DIR/$tool"
+        local backups=($(ls -t "$tool_path.backup."* 2>/dev/null || true))
+        
+        if [[ ${#backups[@]} -gt 3 ]]; then
+            for ((i=3; i<${#backups[@]}; i++)); do
+                rm -f "${backups[$i]}"
+                ((cleaned++))
+            done
+        fi
+    done
+    
+    echo "✅ Cleaned $cleaned old backup files"
+}
+
+# Main script logic
+case "${1:-help}" in
+    list)
+        list_tools
+        ;;
+    install)
+        if [[ $# -lt 2 ]]; then
+            echo "❌ Please specify a tool to install"
+            echo "Available tools: fd, rg, nvim, clangd"
+            exit 1
+        fi
+        install_tool "$2"
+        ;;
+    remove)
+        if [[ $# -lt 2 ]]; then
+            echo "❌ Please specify a tool to remove"
+            exit 1
+        fi
+        remove_tool "$2"
+        ;;
+    update)
+        if [[ $# -ge 2 ]]; then
+            install_tool "$2"
+        else
+            update_tools
+        fi
+        ;;
+    status)
+        if [[ $# -lt 2 ]]; then
+            echo "❌ Please specify a tool to check"
+            exit 1
+        fi
+        show_status "$2"
+        ;;
+    backup)
+        if [[ $# -lt 2 ]]; then
+            echo "❌ Please specify a tool to backup"
+            exit 1
+        fi
+        backup_tool "$2"
+        ;;
+    restore)
+        if [[ $# -lt 2 ]]; then
+            echo "❌ Please specify a tool to restore"
+            exit 1
+        fi
+        restore_tool "$2"
+        ;;
+    clean)
+        clean_backups
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        echo "❌ Unknown command: $1"
+        echo "Run 'manage-tools help' for usage information"
+        exit 1
+        ;;
+esac 

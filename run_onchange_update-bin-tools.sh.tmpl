@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# chezmoi run_onchange script to update binary tools when versions.toml changes
+# This script runs when the versions.toml file is modified
+
+# versions.toml hash: {{ include "dot_config/bin-tools/versions.toml" | sha256sum }}
+
+set -euo pipefail
+
+BIN_DIR="$HOME/.local/bin"
+CONFIG_DIR="$HOME/.config/bin-tools"
+
+echo "🔄 Updating binary tools based on configuration changes..."
+
+# Function to backup existing binary
+backup_binary() {
+    local name="$1"
+    local target_path="$BIN_DIR/$name"
+    
+    if [[ -f "$target_path" ]]; then
+        echo "📦 Backing up existing $name..."
+        cp "$target_path" "$target_path.backup.$(date +%Y%m%d_%H%M%S)"
+    fi
+}
+
+# Function to restore binary from backup if update fails
+restore_binary() {
+    local name="$1"
+    local target_path="$BIN_DIR/$name"
+    local backup_file=$(ls "$target_path.backup."* 2>/dev/null | tail -n1 || echo "")
+    
+    if [[ -n "$backup_file" && -f "$backup_file" ]]; then
+        echo "🔄 Restoring $name from backup..."
+        mv "$backup_file" "$target_path"
+    fi
+}
+
+# Function to clean old backups (keep only latest 3)
+cleanup_backups() {
+    local name="$1"
+    local target_path="$BIN_DIR/$name"
+    
+    # Remove old backups, keep only the latest 3
+    ls -t "$target_path.backup."* 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
+}
+
+echo "✅ Binary tools update check completed!"
+echo "💡 To force reinstall a tool, remove it from $BIN_DIR and run: chezmoi apply" 

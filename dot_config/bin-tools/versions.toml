@@ -1,0 +1,23 @@
+# Binary tools version configuration
+# This file defines the versions of tools to install
+
+[fd]
+version = "v10.2.0"
+url_template = "https://github.com/sharkdp/fd/releases/download/{version}/fd-{version}-{arch}-unknown-linux-musl.tar.gz"
+extract_path = "fd-{version}-{arch}-unknown-linux-musl/fd"
+
+[ripgrep]
+version = "14.1.1"
+url_template = "https://github.com/BurntSushi/ripgrep/releases/download/{version}/ripgrep-{version}-{arch}-unknown-linux-musl.tar.gz"
+extract_path = "ripgrep-{version}-{arch}-unknown-linux-musl/rg"
+
+[neovim]
+version = "latest"
+url = "https://github.com/neovim/neovim/releases/latest/download/nvim.appimage"
+type = "appimage"
+
+[clangd]
+version = "19.1.2"
+url_template = "https://github.com/clangd/clangd/releases/download/{version}/clangd-linux-{version}.zip"
+type = "archive"
+install_dir = "~/.local/clangd/clangd_{version}" 
