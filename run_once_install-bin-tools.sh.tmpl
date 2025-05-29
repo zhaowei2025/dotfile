@@ -402,11 +402,26 @@ if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
     old_zsh="$ZSH"
     unset ZSH
     
+    # Create a temporary directory for installation
+    temp_install_dir=$(mktemp -d)
+    cd "$temp_install_dir"
+    
+    # Download and run the installer in the temp directory
     if command -v curl >/dev/null 2>&1; then
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh > install.sh
     elif command -v wget >/dev/null 2>&1; then
-        sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended
+        wget -q https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O install.sh
     fi
+    
+    # Make the installer executable
+    chmod +x install.sh
+    
+    # Run the installer with custom options
+    ZSH="$HOME/.oh-my-zsh" KEEP_ZSHRC=yes RUNZSH=no CHSH=no sh install.sh
+    
+    # Clean up
+    cd - > /dev/null
+    rm -rf "$temp_install_dir"
     
     # Restore ZSH value if it was set
     if [[ -n "$old_zsh" ]]; then
