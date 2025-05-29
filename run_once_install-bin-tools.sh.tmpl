@@ -76,8 +76,8 @@ esac
 # Install fd (find alternative)
 echo "🔍 Installing fd..."
 FD_VERSION="v10.2.0"
-FD_URL="https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/fd-${FD_VERSION}-${ARCH}-unknown-linux-musl.tar.gz"
-install_from_archive "fd" "$FD_URL" "fd-${FD_VERSION}-${ARCH}-unknown-linux-musl/fd"
+FD_URL="https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/fd-${FD_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz"
+install_from_archive "fd" "$FD_URL" "fd-${FD_VERSION}-${ARCH}-unknown-linux-gnu/fd"
 
 # Install ripgrep (rg)
 echo "🔍 Installing ripgrep..."
@@ -88,11 +88,36 @@ install_from_archive "rg" "$RG_URL" "ripgrep-${RG_VERSION}-${ARCH}-unknown-linux
 # Install Neovim
 echo "📝 Installing Neovim..."
 if [[ ! -f "$BIN_DIR/nvim" ]]; then
-    NVIM_URL="https://github.com/neovim/neovim/releases/latest/download/nvim.appimage"
-    echo "📥 Downloading Neovim AppImage..."
-    curl -fsSL "$NVIM_URL" -o "$BIN_DIR/nvim"
-    chmod +x "$BIN_DIR/nvim"
-    echo "✅ Installed nvim"
+    # Check glibc version
+    GLIBC_VER=$(ldd --version | head -n1 | grep -oE '[0-9]+\.[0-9]+')
+    REQUIRED_GLIBC=2.12
+    
+    if [ "$(printf '%s\n' "$REQUIRED_GLIBC" "$GLIBC_VER" | sort -V | head -n1)" = "$REQUIRED_GLIBC" ]; then
+        NVIM_VERSION="v0.11.1"
+        NVIM_URL="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-${ARCH}.appimage"
+        
+        echo "📥 Downloading Neovim ${NVIM_VERSION}..."
+        temp_dir=$(mktemp -d)
+        cd "$temp_dir"
+        
+        curl -fsSL "$NVIM_URL" -o nvim.appimage
+        chmod +x nvim.appimage
+        
+        # Extract AppImage to avoid FUSE issues
+        ./nvim.appimage --appimage-extract > /dev/null
+        
+        # Move extracted files to ~/.local/bin/squashfs-root
+        mv squashfs-root "$BIN_DIR/"
+        
+        # Create symlink
+        ln -sf "$BIN_DIR/squashfs-root/usr/bin/nvim" "$BIN_DIR/nvim"
+        
+        cd - > /dev/null
+        rm -rf "$temp_dir"
+        echo "✅ Installed nvim"
+    else
+        echo "⚠️  glibc version $GLIBC_VER < $REQUIRED_GLIBC, skipping Neovim installation"
+    fi
 else
     echo "✓ nvim already exists, skipping..."
 fi
@@ -125,9 +150,20 @@ else
     echo "✓ clangd already exists, skipping..."
 fi
 
+# Add PATH to .zshrc if not already present
+if ! grep -q "\.local/bin" ~/.zshrc 2>/dev/null; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+    echo "📝 Added ~/.local/bin to PATH in .zshrc"
+fi
+
+if ! grep -q "clangd_${CLANGD_VERSION}/bin" ~/.zshrc 2>/dev/null; then
+    echo 'export PATH="$HOME/.local/clangd/clangd_19.1.2/bin:$PATH"' >> ~/.zshrc
+    echo "📝 Added clangd to PATH in .zshrc"
+fi
+
 echo "🎉 All binary tools installation completed!"
 echo "📍 Tools installed in: $BIN_DIR"
-echo "🔧 Make sure $BIN_DIR is in your PATH"
+echo "🔧 Please restart your terminal or run: source ~/.zshrc"
 
 # Verify installations
 echo ""
