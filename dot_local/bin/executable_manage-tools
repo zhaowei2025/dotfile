@@ -7,7 +7,11 @@ set -euo pipefail
 
 BIN_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/bin-tools"
+BACKUP_DIR="$HOME/.local/backup/bin-tools"
 CHEZMOI_SOURCE="$(chezmoi source-path)"
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
 
 show_help() {
     cat << EOF
@@ -62,11 +66,17 @@ list_tools() {
     echo ""
     echo "📍 Installation directory: $BIN_DIR"
     echo "⚙️  Configuration: $CONFIG_DIR/versions.toml"
+    echo "💾 Backup directory: $BACKUP_DIR"
 }
 
 install_tool() {
     local tool="$1"
     echo "🔧 Installing $tool..."
+    
+    # Backup existing tool if it exists
+    if [[ -f "$BIN_DIR/$tool" ]] || [[ -L "$BIN_DIR/$tool" ]]; then
+        backup_tool "$tool"
+    fi
     
     # Remove existing tool
     rm -f "$BIN_DIR/$tool"
@@ -87,6 +97,8 @@ remove_tool() {
     local tool_path="$BIN_DIR/$tool"
     
     if [[ -f "$tool_path" ]] || [[ -L "$tool_path" ]]; then
+        # Create backup before removing
+        backup_tool "$tool"
         echo "🗑️  Removing $tool..."
         rm -f "$tool_path"
         echo "✅ $tool removed"
@@ -129,7 +141,7 @@ show_status() {
         echo "Version: $version"
         
         # Check for backups
-        local backups=$(ls "$tool_path.backup."* 2>/dev/null | wc -l || echo "0")
+        local backups=$(ls "$BACKUP_DIR/${tool}.backup."* 2>/dev/null | wc -l || echo "0")
         echo "Backups: $backups"
     else
         echo "Status: ❌ Not installed"
@@ -140,9 +152,9 @@ backup_tool() {
     local tool="$1"
     local tool_path="$BIN_DIR/$tool"
     
-    if [[ -f "$tool_path" ]]; then
-        local backup_path="$tool_path.backup.$(date +%Y%m%d_%H%M%S)"
-        cp "$tool_path" "$backup_path"
+    if [[ -f "$tool_path" ]] || [[ -L "$tool_path" ]]; then
+        local backup_path="$BACKUP_DIR/${tool}.backup.$(date +%Y%m%d_%H%M%S)"
+        cp "$tool_path" "$backup_path" 2>/dev/null || true
         echo "📦 Backup created: $backup_path"
     else
         echo "❌ $tool is not installed, cannot create backup"
@@ -153,7 +165,7 @@ backup_tool() {
 restore_tool() {
     local tool="$1"
     local tool_path="$BIN_DIR/$tool"
-    local backup_file=$(ls "$tool_path.backup."* 2>/dev/null | tail -n1 || echo "")
+    local backup_file=$(ls -t "$BACKUP_DIR/${tool}.backup."* 2>/dev/null | head -n1 || echo "")
     
     if [[ -n "$backup_file" && -f "$backup_file" ]]; then
         echo "🔄 Restoring $tool from $backup_file..."
@@ -171,11 +183,10 @@ clean_backups() {
     local cleaned=0
     
     for tool in fd rg nvim clangd; do
-        local tool_path="$BIN_DIR/$tool"
-        local backups=($(ls -t "$tool_path.backup."* 2>/dev/null || true))
+        local backups=($(ls -t "$BACKUP_DIR/${tool}.backup."* 2>/dev/null || true))
         
-        if [[ ${#backups[@]} -gt 3 ]]; then
-            for ((i=3; i<${#backups[@]}; i++)); do
+        if [[ ${#backups[@]} -gt 5 ]]; then
+            for ((i=5; i<${#backups[@]}; i++)); do
                 rm -f "${backups[$i]}"
                 ((cleaned++))
             done
