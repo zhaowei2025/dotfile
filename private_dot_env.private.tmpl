@@ -1,33 +1,32 @@
 # 私有环境变量文件 - 由 chezmoi 管理
 # 此文件使用 private_ 前缀，具有严格的权限控制 (600)
 
-# API 密钥 - 请在新机器上手动设置这些环境变量
+# API 密钥 - 使用环境变量模板
+{{- if .ALI_DEEPSEEK_API_KEY }}
+export ALI_DEEPSEEK_API_KEY="{{ .ALI_DEEPSEEK_API_KEY }}"
+{{- else }}
 # export ALI_DEEPSEEK_API_KEY="your_ali_deepseek_api_key"
-# export DEEPSEEK_API_KEY="your_deepseek_api_key" 
+{{- end }}
+
+{{- if .DEEPSEEK_API_KEY }}
+export DEEPSEEK_API_KEY="{{ .DEEPSEEK_API_KEY }}"
+{{- else }}
+# export DEEPSEEK_API_KEY="your_deepseek_api_key"
+{{- end }}
+
+{{- if .ZHIHE_API_KEY }}
+export ZHIHE_API_KEY="{{ .ZHIHE_API_KEY }}"
+{{- else }}
 # export ZHIHE_API_KEY="your_zhihe_api_key"
-
-{{ if (env "ALI_DEEPSEEK_API_KEY") -}}
-export ALI_DEEPSEEK_API_KEY="{{ env "ALI_DEEPSEEK_API_KEY" }}"
 {{- end }}
 
-{{ if (env "DEEPSEEK_API_KEY") -}}
-export DEEPSEEK_API_KEY="{{ env "DEEPSEEK_API_KEY" }}"
-{{- end }}
-
-{{ if (env "ZHIHE_API_KEY") -}}
-export ZHIHE_API_KEY="{{ env "ZHIHE_API_KEY" }}"
-{{- end }}
-
-# GitHub Personal Access Token
-# 在新机器上部署时，请手动设置此环境变量：
+{{- if .GITHUB_TOKEN }}
+export GITHUB_TOKEN="{{ .GITHUB_TOKEN }}"
+{{- else }}
 # export GITHUB_TOKEN="your_github_token_here"
-{{ if (env "GITHUB_TOKEN") -}}
-export GITHUB_TOKEN="{{ env "GITHUB_TOKEN" }}"
-{{- else -}}
-# export GITHUB_TOKEN=""  # 请在此设置你的 GitHub token
 {{- end }}
 
-# 代理配置（私有）
+# 代理配置
 # export HTTP_PROXY="http://proxy.example.com:8080"
 # export HTTPS_PROXY="http://proxy.example.com:8080"
 

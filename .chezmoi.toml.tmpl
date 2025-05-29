@@ -1,0 +1,11 @@
+{{ $passphrase := promptStringOnce . "passphrase" "Enter GPG passphrase" -}}
+
+# Chezmoi 配置文件
+encryption = "gpg"
+
+[data]
+    passphrase = {{ $passphrase | quote }}
+
+[gpg]
+    symmetric = true
+    args = ["--batch", "--passphrase", {{ $passphrase | quote }}, "--no-symkey-cache", "--quiet"] 
