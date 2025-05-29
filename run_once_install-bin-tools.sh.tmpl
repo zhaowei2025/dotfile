@@ -166,12 +166,17 @@ install_from_github() {
     # Get the correct architecture for this tool
     local tool_arch=$(map_arch_for_tool "$tool_name" "$ARCH")
     
-    # Replace variables in URL template
+    # Replace variables in URL template and extract path
     local url="${url_template//\{version\}/$version}"
     url="${url//\{arch\}/$tool_arch}"
     
+    # Replace variables in extract path
+    local actual_extract_path="${extract_path//\{version\}/$version}"
+    actual_extract_path="${actual_extract_path//\{arch\}/$tool_arch}"
+    
     print_info "Installing $tool_name from GitHub..."
     print_info "URL: $url"
+    print_info "Extract path: $actual_extract_path"
     
     local temp_dir=$(mktemp -d)
     cd "$temp_dir"
@@ -197,8 +202,8 @@ install_from_github() {
     fi
     
     # Find and install binary
-    if [[ -f "$extract_path" ]]; then
-        cp "$extract_path" "$target_path"
+    if [[ -f "$actual_extract_path" ]]; then
+        cp "$actual_extract_path" "$target_path"
         chmod +x "$target_path"
         print_success "Installed $tool_name"
     else
