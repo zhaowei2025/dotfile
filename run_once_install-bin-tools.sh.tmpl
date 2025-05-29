@@ -139,8 +139,8 @@ fi
 
 # Install clangd
 echo "🔧 Installing clangd..."
+CLANGD_VERSION="19.1.2"
 if [[ ! -f "$BIN_DIR/clangd" ]]; then
-    CLANGD_VERSION="19.1.2"
     CLANGD_URL="https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd-linux-${CLANGD_VERSION}.zip"
     CLANGD_DIR="$HOME/.local/clangd/clangd_${CLANGD_VERSION}"
     
