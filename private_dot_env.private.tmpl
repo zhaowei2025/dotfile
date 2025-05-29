@@ -20,9 +20,12 @@ export ZHIHE_API_KEY="{{ .ZHIHE_API_KEY }}"
 # export ZHIHE_API_KEY="your_zhihe_api_key"
 {{- end }}
 
+# GitHub Personal Access Token - 优先使用环境变量，否则使用加密文件
 {{- if .GITHUB_TOKEN }}
 export GITHUB_TOKEN="{{ .GITHUB_TOKEN }}"
 {{- else }}
+# 从加密文件加载 GitHub Token
+# 运行: chezmoi decrypt encrypted_private_dot_github-token.env.asc | source /dev/stdin
 # export GITHUB_TOKEN="your_github_token_here"
 {{- end }}
 
