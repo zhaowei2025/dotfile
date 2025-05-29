@@ -3,7 +3,7 @@
 # chezmoi run_onchange script to update binary tools when versions.toml changes
 # This script runs when the versions.toml file is modified
 
-# versions.toml hash: {{ include "private_dot_config/bin-tools/versions.toml" | sha256sum }}
+# versions.toml hash: {{ include "dot_config/bin-tools/versions.toml" | sha256sum }}
 
 set -euo pipefail
 
