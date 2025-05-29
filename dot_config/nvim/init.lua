@@ -743,6 +743,29 @@ require('lazy').setup({
           end
         }
       }
+
+      -- Configure LSP servers
+      local lspconfig = require('lspconfig')
+      
+      -- Lua LSP
+      lspconfig.lua_ls.setup {
+        settings = {
+          Lua = {
+            completion = {
+              callSnippet = 'Replace',
+            },
+          },
+        },
+      }
+      
+      -- C/C++ LSP
+      lspconfig.clangd.setup {}
+      
+      -- Python LSP
+      lspconfig.pyright.setup {}
+      
+      -- TypeScript/JavaScript LSP
+      lspconfig.tsserver.setup {}
     end,
   },
 
