@@ -399,7 +399,7 @@ if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
     print_info "Installing Oh My Zsh..."
     
     # Save current ZSH value and unset it for installation
-    local old_zsh="$ZSH"
+    old_zsh="$ZSH"
     unset ZSH
     
     if command -v curl >/dev/null 2>&1; then
