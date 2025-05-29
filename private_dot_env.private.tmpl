@@ -1,10 +1,22 @@
 # 私有环境变量文件 - 由 chezmoi 管理
 # 此文件使用 private_ 前缀，具有严格的权限控制 (600)
 
-# API 密钥
-export ALI_DEEPSEEK_API_KEY="sk-bd2aa34a1f574999b73c67e9bc5cb66d"
-export DEEPSEEK_API_KEY="sk-3c2d60c5951e45a69461589592821d26"
-export ZHIHE_API_KEY="sk-15a8176f090c494c999be5580bba57f0"
+# API 密钥 - 请在新机器上手动设置这些环境变量
+# export ALI_DEEPSEEK_API_KEY="your_ali_deepseek_api_key"
+# export DEEPSEEK_API_KEY="your_deepseek_api_key" 
+# export ZHIHE_API_KEY="your_zhihe_api_key"
+
+{{ if (env "ALI_DEEPSEEK_API_KEY") -}}
+export ALI_DEEPSEEK_API_KEY="{{ env "ALI_DEEPSEEK_API_KEY" }}"
+{{- end }}
+
+{{ if (env "DEEPSEEK_API_KEY") -}}
+export DEEPSEEK_API_KEY="{{ env "DEEPSEEK_API_KEY" }}"
+{{- end }}
+
+{{ if (env "ZHIHE_API_KEY") -}}
+export ZHIHE_API_KEY="{{ env "ZHIHE_API_KEY" }}"
+{{- end }}
 
 # GitHub Personal Access Token
 # 在新机器上部署时，请手动设置此环境变量：
