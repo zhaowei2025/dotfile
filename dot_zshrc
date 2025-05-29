@@ -1,5 +1,245 @@
-source /usr/share/zsh/config/zshrc
-export PROMPT='%F{cyan}%n@%F{yellow}%m:%F{green}%~%f > '
+# =============================================================================
+# ZSH 现代化配置增强
+# =============================================================================
+
+# Oh My Zsh 配置
+export ZSH="$HOME/.oh-my-zsh"
+
+# 主题设置 (可选择: agnoster, powerlevel10k, robbyrussell, af-magic, bira)
+ZSH_THEME="agnoster"
+
+# 插件配置
+plugins=(
+    git                    # Git 快捷命令和状态显示
+    zsh-autosuggestions   # 自动建议历史命令
+    zsh-syntax-highlighting # 语法高亮
+    colored-man-pages     # 彩色 man 页面
+    command-not-found     # 命令未找到时建议包名
+    extract               # 智能解压缩
+    z                     # 智能目录跳转
+    sudo                  # 双击 ESC 添加 sudo
+    web-search            # 快速网络搜索
+    copypath              # 复制当前路径
+    copybuffer            # 复制当前命令行
+    dirhistory            # 目录历史导航
+    jsontools             # JSON 工具
+    urltools              # URL 工具
+    encode64              # Base64 编码解码
+)
+
+# 如果 Oh My Zsh 存在则加载
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+    source "$ZSH/oh-my-zsh.sh"
+else
+    # 如果没有 Oh My Zsh，使用原有配置
+    source /usr/share/zsh/config/zshrc
+    export PROMPT='%F{cyan}%n@%F{yellow}%m:%F{green}%~%f > '
+fi
+
+# =============================================================================
+# ZSH 选项配置
+# =============================================================================
+
+# 历史记录配置
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.zsh_history
+
+# 启用有用的 zsh 选项
+setopt HIST_EXPIRE_DUPS_FIRST    # 首先删除重复的历史条目
+setopt HIST_IGNORE_DUPS          # 不保存重复的历史条目
+setopt HIST_IGNORE_ALL_DUPS      # 删除所有旧的重复条目
+setopt HIST_FIND_NO_DUPS         # 搜索时不显示重复条目
+setopt HIST_IGNORE_SPACE         # 以空格开头的命令不保存到历史
+setopt HIST_SAVE_NO_DUPS         # 保存时不保存重复条目
+setopt HIST_VERIFY               # 历史展开后等待用户确认
+setopt SHARE_HISTORY             # 多个终端间共享历史
+setopt APPEND_HISTORY            # 追加历史而不是覆盖
+setopt INC_APPEND_HISTORY        # 立即追加历史
+setopt AUTO_CD                   # 输入目录名自动 cd
+setopt CORRECT                   # 命令纠错
+setopt COMPLETE_IN_WORD          # 在单词中间也能补全
+setopt ALWAYS_TO_END             # 补全后光标移到末尾
+
+# 大小写不敏感的补全
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+# 彩色补全
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+
+# =============================================================================
+# 键绑定增强
+# =============================================================================
+
+# 使用 Emacs 键绑定
+bindkey -e
+
+# 历史搜索
+bindkey '^R' history-incremental-search-backward
+bindkey '^S' history-incremental-search-forward
+
+# 快速编辑命令行
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^X^E' edit-command-line
+
+# 词汇导航
+bindkey '^[[1;5C' forward-word   # Ctrl+Right
+bindkey '^[[1;5D' backward-word  # Ctrl+Left
+
+# =============================================================================
+# 现代化工具别名
+# =============================================================================
+
+# 如果存在更好的工具，使用它们
+if command -v exa >/dev/null 2>&1; then
+    alias ls='exa --icons'
+    alias ll='exa -alF --icons --git'
+    alias la='exa -a --icons'
+    alias lt='exa --tree --icons'
+fi
+
+if command -v bat >/dev/null 2>&1; then
+    alias cat='bat --paging=never'
+    alias bcat='bat'
+fi
+
+if command -v fd >/dev/null 2>&1; then
+    alias find='fd'
+fi
+
+if command -v rg >/dev/null 2>&1; then
+    alias grep='rg'
+fi
+
+if command -v lazygit >/dev/null 2>&1; then
+    alias lg='lazygit'
+fi
+
+if command -v btm >/dev/null 2>&1; then
+    alias top='btm'
+    alias htop='btm'
+fi
+
+if command -v dust >/dev/null 2>&1; then
+    alias du='dust'
+fi
+
+# =============================================================================
+# 增强功能函数
+# =============================================================================
+
+# 智能 mkdir 并进入目录
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# 快速查找并编辑文件
+fvim() {
+    local file
+    file=$(fzf --preview 'bat --color=always --style=numbers --line-range=:500 {}' 2>/dev/null) && $EDITOR "$file"
+}
+
+# 快速进入目录
+fcd() {
+    local dir
+    dir=$(find . -type d 2>/dev/null | fzf +m) && cd "$dir"
+}
+
+# 智能解压缩
+extract() {
+    if [ -f $1 ] ; then
+        case $1 in
+            *.tar.bz2)   tar xjf $1     ;;
+            *.tar.gz)    tar xzf $1     ;;
+            *.bz2)       bunzip2 $1     ;;
+            *.rar)       unrar e $1     ;;
+            *.gz)        gunzip $1      ;;
+            *.tar)       tar xf $1      ;;
+            *.tbz2)      tar xjf $1     ;;
+            *.tgz)       tar xzf $1     ;;
+            *.zip)       unzip $1       ;;
+            *.Z)         uncompress $1  ;;
+            *.7z)        7z x $1        ;;
+            *)     echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# 创建备份
+backup() {
+    cp "$1"{,.backup-$(date +%Y%m%d_%H%M%S)}
+}
+
+# 快速启动HTTP服务器
+serve() {
+    local port="${1:-8000}"
+    echo "🌐 Starting HTTP server on port $port"
+    echo "📂 Serving: $(pwd)"
+    echo "🔗 URL: http://localhost:$port"
+    
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -m http.server "$port"
+    elif command -v python >/dev/null 2>&1; then
+        python -m SimpleHTTPServer "$port"
+    else
+        echo "❌ Python not found"
+    fi
+}
+
+# 系统信息显示
+sysinfo() {
+    echo "🖥️  System Information"
+    echo "===================="
+    echo "🐧 OS: $(uname -s) $(uname -r)"
+    echo "💻 Architecture: $(uname -m)"
+    echo "👤 User: $(whoami)"
+    echo "🏠 Home: $HOME"
+    echo "⏰ Uptime: $(uptime -p 2>/dev/null || uptime)"
+    echo "💾 Memory: $(free -h | awk '/^Mem:/ {printf "%s/%s (%.1f%%)", $3, $2, $3/$2*100}')"
+    echo "💿 Disk: $(df -h / | awk 'NR==2 {printf "%s/%s (%s)", $3, $2, $5}')"
+    echo "🌡️  Load: $(uptime | awk '{print $NF}')"
+}
+
+# =============================================================================
+# 环境变量增强
+# =============================================================================
+
+# 设置编辑器
+if command -v nvim >/dev/null 2>&1; then
+    export EDITOR='nvim'
+    export VISUAL='nvim'
+elif command -v vim >/dev/null 2>&1; then
+    export EDITOR='vim'
+    export VISUAL='vim'
+else
+    export EDITOR='nano'
+    export VISUAL='nano'
+fi
+
+# FZF 配置 (如果安装了 fzf)
+if command -v fzf >/dev/null 2>&1; then
+    export FZF_DEFAULT_OPTS='
+        --height 40% 
+        --layout=reverse 
+        --border 
+        --preview="bat --color=always --style=numbers --line-range=:500 {}" 
+        --preview-window=right:50%:wrap
+    '
+    
+    if command -v fd >/dev/null 2>&1; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    fi
+fi
+
+# =============================================================================
+# 原有配置保持不变 - PATH设置
+# =============================================================================
+
+# PATH 设置
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.local/clangd/clangd_19.1.2/bin:$PATH"
 
@@ -130,31 +370,41 @@ function check_proxy_on_startup() {
 check_proxy_on_startup
 
 # =============================================================================
-# 常用快捷命令
+# 基础快捷命令 (不与现代工具冲突)
 # =============================================================================
 
 # 文件和目录操作
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
+# ll, la 等会被现代工具重新定义，这里提供后备
+if ! command -v exa >/dev/null 2>&1 && ! command -v eza >/dev/null 2>&1; then
+    alias ll='ls -alF'
+    alias la='ls -A'
+    alias l='ls -CF'
+fi
+
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
 alias -- -='cd -'
 
-# 文件查看和编辑
-alias cat='cat -n'          # 显示行号
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
+# 文件查看和编辑 (如果没有现代工具)
+if ! command -v bat >/dev/null 2>&1; then
+    alias cat='cat -n'          # 显示行号
+fi
+
+if ! command -v rg >/dev/null 2>&1; then
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
 
 # 系统信息
 alias df='df -h'             # 人性化显示磁盘使用
-alias du='du -h'             # 人性化显示目录大小
+if ! command -v dust >/dev/null 2>&1; then
+    alias du='du -h'         # 人性化显示目录大小
+fi
 alias free='free -h'         # 人性化显示内存使用
 alias ps='ps auxf'           # 详细进程信息
-alias top='htop'             # 如果有 htop 就用 htop
 
 # 网络工具
 alias ping='ping -c 5'       # 默认 ping 5 次
@@ -163,8 +413,10 @@ alias wget='wget -c'         # 支持断点续传
 # 安全操作
 alias rm='rm -i'             # 删除前确认
 
-# 快速查找
-alias f='find . -name'       # 快速查找文件
+# 快速查找 (如果没有现代工具)
+if ! command -v fd >/dev/null 2>&1; then
+    alias f='find . -name'   # 快速查找文件
+fi
 alias h='history | grep'     # 在历史记录中搜索
 
 # 进程管理
@@ -391,8 +643,9 @@ alias dfinit='dotfiles_init'        # 初始化新机器
 alias dfedit='dotfiles_edit'        # 一键编辑并推送配置
 alias dfquick='dotfiles_quick_save'  # 快速提交当前所有更改
 
-echo "🎉 代理管理命令已加载！"
-echo "💡 快捷命令："
+echo "🎉 ZSH 增强配置已加载！"
+echo ""
+echo "💡 代理管理命令："
 echo "   pon/proxy_on     - 开启代理"
 echo "   poff/proxy_off   - 关闭代理"
 echo "   pst/proxy_status - 查看代理状态"
@@ -400,9 +653,36 @@ echo "   ptest/proxy_test - 测试代理连接"
 echo "   gpon/git_proxy_on    - 开启 Git 代理"
 echo "   gpoff/git_proxy_off  - 关闭 Git 代理"
 echo "   gpst/git_proxy_status - 查看 Git 代理状态"
-echo "📝 常用快捷命令已加载: ll, .., f, h, ports 等"
-echo "👥 Git 用户切换命令: gwork, gpersonal, gwho, glwork, glpersonal, glwho"
-echo "📦 Dotfiles 同步命令: dfpush, dfpull, dfstatus, dfinit, dfedit, dfquick"
+echo ""
+echo "📝 现代化工具命令 (如果已安装)："
+echo "   fd <pattern>     - 更好的 find"
+echo "   rg <pattern>     - 更好的 grep"
+echo "   bat <file>       - 更好的 cat"
+echo "   exa/eza -la      - 更好的 ls"
+echo "   lg               - LazyGit"
+echo "   btm              - 更好的 top"
+echo "   dust             - 更好的 du"
+echo ""
+echo "🚀 增强功能命令："
+echo "   mkcd <dir>       - 创建并进入目录"
+echo "   extract <file>   - 智能解压"
+echo "   serve [port]     - 快速HTTP服务器"
+echo "   sysinfo          - 系统信息"
+echo "   backup <file>    - 创建备份"
+echo "   fvim             - 模糊查找编辑文件"
+echo "   fcd              - 模糊查找进入目录"
+echo ""
+echo "👥 Git 用户切换命令："
+echo "   gwork, gpersonal, gwho, glwork, glpersonal, glwho"
+echo ""
+echo "📦 Dotfiles 同步命令："
+echo "   dfpush, dfpull, dfstatus, dfinit, dfedit, dfquick"
+echo ""
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+    echo "✅ Oh My Zsh 已加载"
+else
+    echo "⚠️  Oh My Zsh 未安装，运行安装脚本来获取更多功能"
+fi
 
 # =============================================================================
 # 环境变量设置
