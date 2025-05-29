@@ -1,0 +1,26 @@
+# 私有环境变量文件 - 由 chezmoi 管理
+# 此文件使用 private_ 前缀，具有严格的权限控制 (600)
+
+# API 密钥
+export ALI_DEEPSEEK_API_KEY="sk-bd2aa34a1f574999b73c67e9bc5cb66d"
+export DEEPSEEK_API_KEY="sk-3c2d60c5951e45a69461589592821d26"
+export ZHIHE_API_KEY="sk-15a8176f090c494c999be5580bba57f0"
+
+# GitHub Personal Access Token
+# 在新机器上部署时，请手动设置此环境变量：
+# export GITHUB_TOKEN="your_github_token_here"
+{{ if (env "GITHUB_TOKEN") -}}
+export GITHUB_TOKEN="{{ env "GITHUB_TOKEN" }}"
+{{- else -}}
+# export GITHUB_TOKEN=""  # 请在此设置你的 GitHub token
+{{- end }}
+
+# 代理配置（私有）
+# export HTTP_PROXY="http://proxy.example.com:8080"
+# export HTTPS_PROXY="http://proxy.example.com:8080"
+
+# 其他私有配置
+# export API_KEY="your-secret-api-key"
+# export DATABASE_URL="your-database-url"
+
+# 其他私有环境变量可以添加在这里 
