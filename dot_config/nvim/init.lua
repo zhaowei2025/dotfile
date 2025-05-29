@@ -720,8 +720,27 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
+        ensure_installed = {
+          "lua_ls",
+          "clangd",
+          "pyright",
+          "rust_analyzer",
+          "tsserver",
+          "html",
+          "cssls",
+          "jsonls",
+          "yamlls",
+          "bashls",
+          "dockerls",
+          "gopls",
+          "marksman",
+          "nil_ls",
+          "taplo",
+          "texlab",
+          "vimls",
+          "zls"
+        },
+        automatic_installation = true,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -730,8 +749,8 @@ require('lazy').setup({
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
-          end,
-        },
+          end
+        }
       }
     end,
   },
