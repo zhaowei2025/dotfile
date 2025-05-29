@@ -115,6 +115,12 @@ if [[ ! -f "$BIN_DIR/nvim" ]]; then
         # Extract AppImage to avoid FUSE issues
         ./nvim.appimage --appimage-extract > /dev/null
         
+        # Remove existing squashfs-root if it exists
+        if [[ -d "$BIN_DIR/squashfs-root" ]]; then
+            echo "🗑️  Removing existing squashfs-root..."
+            rm -rf "$BIN_DIR/squashfs-root"
+        fi
+        
         # Move extracted files to ~/.local/bin/squashfs-root
         mv squashfs-root "$BIN_DIR/"
         
