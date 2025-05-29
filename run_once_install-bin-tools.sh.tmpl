@@ -21,8 +21,8 @@ install_binary() {
         return 0
     fi
     
-    echo "📥 Downloading $name..."
-    curl -fsSL "$url" -o "$target_path"
+    echo "📥 Downloading $name from $url"
+    curl -L --progress-bar --show-error "$url" -o "$target_path"
     chmod +x "$target_path"
     echo "✅ Installed $name"
 }
@@ -40,14 +40,16 @@ install_from_archive() {
     fi
     
     echo "📥 Downloading and extracting $name..."
+    echo "🔗 URL: $url"
     cd "$temp_dir"
     
     if [[ "$url" == *.tar.gz ]] || [[ "$url" == *.tgz ]]; then
-        curl -fsSL "$url" | tar -xz
+        curl -L --progress-bar --show-error "$url" | tar -xz
     elif [[ "$url" == *.tar.xz ]]; then
-        curl -fsSL "$url" | tar -xJ
+        curl -L --progress-bar --show-error "$url" | tar -xJ
     elif [[ "$url" == *.zip ]]; then
-        curl -fsSL "$url" -o archive.zip
+        curl -L --progress-bar --show-error "$url" -o archive.zip
+        echo "📦 Extracting archive..."
         unzip -q archive.zip
         rm archive.zip
     fi
@@ -58,6 +60,7 @@ install_from_archive() {
         echo "✅ Installed $name"
     else
         echo "❌ Failed to find $extract_path in archive"
+        echo "📁 Available files:"
         ls -la
     fi
     
@@ -72,6 +75,8 @@ case $ARCH in
     aarch64|arm64) ARCH="aarch64" ;;
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
+
+echo "🖥️  Detected architecture: $ARCH"
 
 # Install fd (find alternative)
 echo "🔍 Installing fd..."
@@ -92,17 +97,21 @@ if [[ ! -f "$BIN_DIR/nvim" ]]; then
     GLIBC_VER=$(ldd --version | head -n1 | grep -oE '[0-9]+\.[0-9]+')
     REQUIRED_GLIBC=2.12
     
+    echo "🔍 Detected glibc version: $GLIBC_VER"
+    
     if [ "$(printf '%s\n' "$REQUIRED_GLIBC" "$GLIBC_VER" | sort -V | head -n1)" = "$REQUIRED_GLIBC" ]; then
         NVIM_VERSION="v0.11.1"
         NVIM_URL="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-${ARCH}.appimage"
         
         echo "📥 Downloading Neovim ${NVIM_VERSION}..."
+        echo "🔗 URL: $NVIM_URL"
         temp_dir=$(mktemp -d)
         cd "$temp_dir"
         
-        curl -fsSL "$NVIM_URL" -o nvim.appimage
+        curl -L --progress-bar --show-error "$NVIM_URL" -o nvim.appimage
         chmod +x nvim.appimage
         
+        echo "📦 Extracting AppImage..."
         # Extract AppImage to avoid FUSE issues
         ./nvim.appimage --appimage-extract > /dev/null
         
@@ -129,12 +138,16 @@ if [[ ! -f "$BIN_DIR/clangd" ]]; then
     CLANGD_URL="https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd-linux-${CLANGD_VERSION}.zip"
     CLANGD_DIR="$HOME/.local/clangd/clangd_${CLANGD_VERSION}"
     
+    echo "📁 Installing to: $CLANGD_DIR"
     mkdir -p "$CLANGD_DIR"
     temp_dir=$(mktemp -d)
     cd "$temp_dir"
     
-    echo "📥 Downloading clangd..."
-    curl -fsSL "$CLANGD_URL" -o clangd.zip
+    echo "📥 Downloading clangd ${CLANGD_VERSION}..."
+    echo "🔗 URL: $CLANGD_URL"
+    curl -L --progress-bar --show-error "$CLANGD_URL" -o clangd.zip
+    
+    echo "📦 Extracting clangd..."
     unzip -q clangd.zip
     
     # Move extracted files to clangd directory
@@ -151,6 +164,7 @@ else
 fi
 
 # Add PATH to .zshrc if not already present
+echo "🔧 Updating PATH configuration..."
 if ! grep -q "\.local/bin" ~/.zshrc 2>/dev/null; then
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
     echo "📝 Added ~/.local/bin to PATH in .zshrc"
