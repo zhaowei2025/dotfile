@@ -363,3 +363,20 @@ echo "   gpst/git_proxy_status - 查看 Git 代理状态"
 echo "📝 常用快捷命令已加载: ll, .., f, h, ports 等"
 echo "👥 Git 用户切换命令: gwork, gpersonal, gwho, glwork, glpersonal, glwho"
 echo "📦 Dotfiles 同步命令: dfpush, dfpull, dfstatus, dfinit"
+
+# =============================================================================
+# 环境变量设置
+# =============================================================================
+
+# 设置终端真彩色支持
+export COLORTERM=truecolor
+
+# 加载私有环境变量文件（不会被 git 追踪）
+if [[ -f ~/.env.private ]]; then
+    source ~/.env.private
+fi
+
+# 如果存在项目特定的环境变量文件也加载
+if [[ -f ./.env.local ]]; then
+    source ./.env.local
+fi
