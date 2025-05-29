@@ -36,6 +36,9 @@
 ```
 ~/.local/share/chezmoi/
 ├── 📄 README.md                                    # 项目说明文档
+├── 📋 BACKUP-GUIDE.md                              # 备份使用指南
+├── 🚀 DEPLOYMENT-WORKFLOW.md                       # 部署工作流程
+├── 💾 backup-dotfiles.sh                           # 配置备份脚本
 ├── 🔧 dot_gitconfig                               # Git 全局配置
 ├── 🐚 dot_zshrc                                   # Zsh Shell 配置
 ├── 🚀 run_once_install-bin-tools.sh.tmpl         # 二进制工具安装脚本
@@ -44,7 +47,7 @@
 ├── 📁 dot_local/bin/
 │   └── 🛠️ executable_manage-tools                # 工具管理脚本
 │
-└── 📁 private_dot_config/
+└── 📁 dot_config/
     ├── 📁 bin-tools/
     │   ├── 📖 README.md                           # 工具管理文档
     │   └── ⚙️ versions.toml                       # 版本配置文件
@@ -62,6 +65,30 @@
 - **操作系统**: Linux (Ubuntu/Debian/CentOS/Arch 等)
 - **架构**: x86_64 或 aarch64
 - **依赖**: curl, unzip, git, zsh
+
+### 🔒 备份现有配置（推荐）
+
+如果你的机器上已有配置文件，建议先备份：
+
+```bash
+# 下载备份脚本
+curl -O https://raw.githubusercontent.com/zhaowei2025/dotfile/main/backup-dotfiles.sh
+chmod +x backup-dotfiles.sh
+
+# 执行备份
+./backup-dotfiles.sh
+
+# 备份将保存在 ~/dotfiles-backup/时间戳/ 目录中
+```
+
+**备份内容包括**:
+- Shell 配置 (`.zshrc`, `.bashrc`, etc.)
+- Git 配置 (`.gitconfig`)
+- 编辑器配置 (`.config/nvim/`)
+- 开发工具 (`.local/bin/`)
+- SSH 配置 (`.ssh/config`)
+
+详细信息请查看 [📋 备份指南](BACKUP-GUIDE.md)
 
 ### 🔧 新机器快速部署
 
@@ -100,6 +127,11 @@
    # 检查代理功能
    pst  # proxy status
    ```
+
+### 📚 部署指南
+
+- 📋 [BACKUP-GUIDE.md](BACKUP-GUIDE.md) - 详细的备份使用指南
+- 🚀 [DEPLOYMENT-WORKFLOW.md](DEPLOYMENT-WORKFLOW.md) - 完整的部署工作流程
 
 ## 📖 使用指南
 
