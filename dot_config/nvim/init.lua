@@ -701,49 +701,38 @@ require('lazy').setup({
       }
 
       -- Ensure the servers and tools above are installed
+      --
+      -- To check the current status of installed tools and/or manually install
+      -- other tools, you can run
+      --    :Mason
+      --
+      -- You can press `g?` for help in this menu.
+      --
+      -- `mason` had to be setup earlier: to configure its options see the
+      -- `dependencies` table for `nvim-lspconfig` above.
+      --
+      -- You can add other tools here that you want Mason to install
+      -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
-      require('mason-tool-installer').setup {
-        ensure_installed = ensure_installed,
-        auto_update = true,
-        run_on_start = true,
-        start_delay = 3000,
-      }
+      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {
-          "lua_ls",
-          "clangd",
-          "pyright",
-          "tsserver",
-        },
-        automatic_installation = true,
-      }
-
-      -- Configure LSP servers
-      local lspconfig = require('lspconfig')
-      
-      -- Lua LSP
-      lspconfig.lua_ls.setup {
-        settings = {
-          Lua = {
-            completion = {
-              callSnippet = 'Replace',
-            },
-          },
+        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        automatic_installation = false,
+        handlers = {
+          function(server_name)
+            local server = servers[server_name] or {}
+            -- This handles overriding only values explicitly passed
+            -- by the server configuration above. Useful when disabling
+            -- certain features of an LSP (for example, turning off formatting for ts_ls)
+            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+            require('lspconfig')[server_name].setup(server)
+          end,
         },
       }
-      
-      -- C/C++ LSP
-      lspconfig.clangd.setup {}
-      
-      -- Python LSP
-      lspconfig.pyright.setup {}
-      
-      -- TypeScript/JavaScript LSP
-      lspconfig.tsserver.setup {}
     end,
   },
 
