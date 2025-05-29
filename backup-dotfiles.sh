@@ -6,8 +6,6 @@
 # 使用：chmod +x backup-dotfiles.sh && ./backup-dotfiles.sh
 # =================================================================
 
-set -e
-
 # 配置
 BACKUP_ROOT="$HOME/dotfiles-backup"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
@@ -38,7 +36,6 @@ print_error() {
 }
 
 # 需要备份的文件和目录列表
-# 根据 chezmoi 配置生成
 BACKUP_TARGETS=(
     # 顶级 dotfiles
     "$HOME/.zshrc"
@@ -92,17 +89,20 @@ check_backup_needed() {
     
     if [[ $found_files -eq 0 ]]; then
         print_success "没有发现需要备份的文件"
-        exit 0
+        return 1
     fi
     
     print_warning "发现 $found_files 个需要备份的项目"
-    return $found_files
+    return 0
 }
 
 # 创建备份目录
 create_backup_dir() {
     print_info "创建备份目录: $BACKUP_DIR"
-    mkdir -p "$BACKUP_DIR"
+    mkdir -p "$BACKUP_DIR" || {
+        print_error "无法创建备份目录: $BACKUP_DIR"
+        exit 1
+    }
     
     # 创建备份信息文件
     cat > "$BACKUP_DIR/backup-info.txt" << EOF
@@ -128,6 +128,7 @@ EOF
 backup_files() {
     local backed_up=0
     local skipped=0
+    local failed=0
     
     print_info "开始备份文件..."
     
@@ -154,19 +155,32 @@ EOF
             # 备份文件或目录
             if [[ -d "$target" ]]; then
                 print_info "备份目录: $target"
-                cp -r "$target" "$backup_parent/"
-                echo "cp -r \"$backup_path\" \"$target\"" >> "$restore_script"
+                if cp -r "$target" "$backup_parent/" 2>/dev/null; then
+                    echo "cp -r \"$backup_path\" \"$target\"" >> "$restore_script"
+                    ((backed_up++))
+                else
+                    print_error "备份失败: $target"
+                    ((failed++))
+                fi
             elif [[ -f "$target" ]]; then
                 print_info "备份文件: $target"
-                cp "$target" "$backup_path"
-                echo "cp \"$backup_path\" \"$target\"" >> "$restore_script"
+                if cp "$target" "$backup_path" 2>/dev/null; then
+                    echo "cp \"$backup_path\" \"$target\"" >> "$restore_script"
+                    ((backed_up++))
+                else
+                    print_error "备份失败: $target"
+                    ((failed++))
+                fi
             elif [[ -L "$target" ]]; then
                 print_info "备份符号链接: $target"
-                cp -P "$target" "$backup_path"
-                echo "cp -P \"$backup_path\" \"$target\"" >> "$restore_script"
+                if cp -P "$target" "$backup_path" 2>/dev/null; then
+                    echo "cp -P \"$backup_path\" \"$target\"" >> "$restore_script"
+                    ((backed_up++))
+                else
+                    print_error "备份失败: $target"
+                    ((failed++))
+                fi
             fi
-            
-            ((backed_up++))
         else
             ((skipped++))
         fi
@@ -177,6 +191,9 @@ EOF
     print_success "备份完成: $backed_up 个项目"
     if [[ $skipped -gt 0 ]]; then
         print_info "跳过不存在的文件: $skipped 个"
+    fi
+    if [[ $failed -gt 0 ]]; then
+        print_warning "备份失败: $failed 个项目"
     fi
 }
 
@@ -190,7 +207,7 @@ create_manifest() {
     echo "=========================" >> "$manifest"
     echo "" >> "$manifest"
     
-    find "$BACKUP_DIR" -type f -not -name "manifest.txt" -not -name "backup-info.txt" -not -name "restore-commands.sh" | while read -r file; do
+    find "$BACKUP_DIR" -type f -not -name "manifest.txt" -not -name "backup-info.txt" -not -name "restore-commands.sh" 2>/dev/null | while read -r file; do
         local relative_file="${file#$BACKUP_DIR/}"
         local original_file="$HOME/$relative_file"
         local file_size=$(stat -c%s "$file" 2>/dev/null || echo "unknown")
@@ -202,7 +219,7 @@ create_manifest() {
         echo "" >> "$manifest"
     done
     
-    find "$BACKUP_DIR" -type d -not -path "$BACKUP_DIR" | while read -r dir; do
+    find "$BACKUP_DIR" -type d -not -path "$BACKUP_DIR" 2>/dev/null | while read -r dir; do
         local relative_dir="${dir#$BACKUP_DIR/}"
         local original_dir="$HOME/$relative_dir"
         
@@ -216,8 +233,8 @@ create_manifest() {
 # 显示备份统计
 show_backup_stats() {
     local total_size=$(du -sh "$BACKUP_DIR" 2>/dev/null | cut -f1)
-    local file_count=$(find "$BACKUP_DIR" -type f | wc -l)
-    local dir_count=$(find "$BACKUP_DIR" -type d | wc -l)
+    local file_count=$(find "$BACKUP_DIR" -type f 2>/dev/null | wc -l)
+    local dir_count=$(find "$BACKUP_DIR" -type d 2>/dev/null | wc -l)
     
     echo ""
     echo "================================================"
@@ -250,13 +267,21 @@ main() {
         exit 0
     fi
     
+    # 检查是否强制模式
+    local force_mode=false
+    if [[ "$1" == "--force" || "$1" == "-f" ]]; then
+        force_mode=true
+        print_info "强制模式：跳过确认"
+    fi
+    
     # 询问用户确认
-    echo ""
-    read -p "是否继续创建备份？(y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "备份已取消"
-        exit 0
+    if [[ "$force_mode" == "false" ]]; then
+        echo ""
+        read -p "是否继续创建备份？(y/N): " -r REPLY
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_info "备份已取消"
+            exit 0
+        fi
     fi
     
     # 执行备份
