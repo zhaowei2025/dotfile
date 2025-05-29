@@ -150,8 +150,12 @@ if [[ ! -f "$BIN_DIR/clangd" ]]; then
     echo "📦 Extracting clangd..."
     unzip -q clangd.zip
     
-    # Move extracted files to clangd directory
-    mv clangd_${CLANGD_VERSION}/* "$CLANGD_DIR/"
+    # Copy extracted files to clangd directory (handle existing files)
+    if command -v rsync >/dev/null 2>&1; then
+        rsync -a clangd_${CLANGD_VERSION}/ "$CLANGD_DIR/"
+    else
+        cp -rf clangd_${CLANGD_VERSION}/* "$CLANGD_DIR/"
+    fi
     
     # Create symlink in bin directory
     ln -sf "$CLANGD_DIR/bin/clangd" "$BIN_DIR/clangd"
