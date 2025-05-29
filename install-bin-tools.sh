@@ -181,48 +181,131 @@ install_from_github() {
     local temp_dir=$(mktemp -d)
     cd "$temp_dir"
     
+    local install_success=false
+    
     # Download and extract
     if [[ "$url" == *.tar.gz ]] || [[ "$url" == *.tgz ]]; then
         if ! curl -L --progress-bar --show-error "$url" | tar -xz; then
             print_error "Failed to download/extract $tool_name"
+            cd - > /dev/null
+            rm -rf "$temp_dir"
             return 1
         fi
     elif [[ "$url" == *.tar.xz ]]; then
         if ! curl -L --progress-bar --show-error "$url" | tar -xJ; then
             print_error "Failed to download/extract $tool_name"
+            cd - > /dev/null
+            rm -rf "$temp_dir"
             return 1
         fi
     elif [[ "$url" == *.zip ]]; then
         if ! curl -L --progress-bar --show-error "$url" -o archive.zip; then
             print_error "Failed to download $tool_name"
+            cd - > /dev/null
+            rm -rf "$temp_dir"
             return 1
         fi
         unzip -q archive.zip
         rm archive.zip
+    elif [[ "$url" == *.AppImage ]]; then
+        if ! curl -L --progress-bar --show-error "$url" -o "$binary_name.AppImage"; then
+            print_error "Failed to download $tool_name"
+            cd - > /dev/null
+            rm -rf "$temp_dir"
+            return 1
+        fi
+        chmod +x "$binary_name.AppImage"
+        # Extract AppImage if possible
+        if ./"$binary_name.AppImage" --appimage-extract >/dev/null 2>&1; then
+            print_info "AppImage extracted successfully"
+            # If squashfs-root exists, move it to tools directory and create symlink
+            if [[ -d "squashfs-root" ]]; then
+                local tool_dir="$TOOLS_DIR/$tool_name-$version"
+                rm -rf "$tool_dir" 2>/dev/null || true
+                mv squashfs-root "$tool_dir"
+                ln -sf "$tool_dir/AppRun" "$target_path"
+                print_success "Created symlink for $tool_name AppImage"
+                install_success=true
+            fi
+        fi
+        rm -f "$binary_name.AppImage"
     fi
     
-    # Find and install binary
+    # If AppImage installation was successful, clean up and return
+    if [[ "$install_success" == "true" ]]; then
+        cd - > /dev/null
+        rm -rf "$temp_dir"
+        return 0
+    fi
+    
+    # Find and copy the binary
     if [[ -f "$actual_extract_path" ]]; then
         cp "$actual_extract_path" "$target_path"
         chmod +x "$target_path"
-        print_success "Installed $tool_name"
+        print_success "$tool_name installed successfully"
+        cd - > /dev/null
+        rm -rf "$temp_dir"
+        return 0
     else
-        # Try to find the binary by name
-        local found_binary=$(find . -name "$binary_name" -type f -executable 2>/dev/null | head -1)
-        if [[ -n "$found_binary" ]]; then
-            cp "$found_binary" "$target_path"
-            chmod +x "$target_path"
-            print_success "Installed $tool_name"
-        else
-            print_error "Could not find binary $binary_name in archive"
-            print_info "Available files:"
-            find . -type f | head -10
-            return 1
+        print_error "Binary not found at expected path: $actual_extract_path"
+        # Try to find the binary
+        local found_binary
+        if found_binary=$(find . -type f -name "$binary_name" -executable -print -quit); then
+            if [[ -n "$found_binary" ]]; then
+                cp "$found_binary" "$target_path"
+                chmod +x "$target_path"
+                print_success "$tool_name installed successfully (found at: $found_binary)"
+                cd - > /dev/null
+                rm -rf "$temp_dir"
+                return 0
+            fi
+        fi
+        cd - > /dev/null
+        rm -rf "$temp_dir"
+        return 1
+    fi
+}
+
+# Function to handle existing squashfs-root directories
+handle_squashfs_root() {
+    local tool_name="$1"
+    local version="$2"
+    local squashfs_path="$3"
+    
+    if [[ ! -d "$squashfs_path" ]]; then
+        print_error "squashfs-root directory not found at: $squashfs_path"
+        return 1
+    fi
+    
+    local tool_dir="$TOOLS_DIR/$tool_name-$version"
+    local target_path="$BIN_DIR/$tool_name"
+    
+    print_info "Processing squashfs-root for $tool_name..."
+    
+    # Move squashfs-root to tools directory
+    rm -rf "$tool_dir" 2>/dev/null || true
+    mv "$squashfs_path" "$tool_dir"
+    
+    # Create symlink to AppRun or main executable
+    if [[ -f "$tool_dir/AppRun" ]]; then
+        ln -sf "$tool_dir/AppRun" "$target_path"
+    elif [[ -f "$tool_dir/usr/bin/$tool_name" ]]; then
+        ln -sf "$tool_dir/usr/bin/$tool_name" "$target_path"
+    else
+        # Try to find the executable
+        local found_binary
+        if found_binary=$(find "$tool_dir" -type f -name "$tool_name" -executable -print -quit); then
+            if [[ -n "$found_binary" ]]; then
+                ln -sf "$found_binary" "$target_path"
+            else
+                print_error "Could not find executable in squashfs-root"
+                return 1
+            fi
         fi
     fi
     
-    cd - > /dev/null
-    rm -rf "$temp_dir"
+    print_success "Created symlink for $tool_name from squashfs-root"
+    return 0
 }
 
 # Function to install AppImage
