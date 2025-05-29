@@ -527,7 +527,29 @@ chezmoi cd && git log --oneline -n 10
 
 由于安全考虑，敏感信息（API密钥、tokens）不会存储在Git仓库中。我们提供了多种安全的同步方案：
 
-### 方案1：交互式设置（推荐新手）
+### 方案1：Chezmoi原生AGE加密（⭐推荐专业用户）
+
+使用chezmoi内置的AGE加密功能，这是最安全和标准化的方案：
+
+```bash
+# 运行原生加密管理器
+~/.local/share/chezmoi/scripts/chezmoi-token-manager.sh
+```
+
+**核心优势：**
+- 🔒 **军用级AGE加密** - 现代化加密算法
+- 🔄 **Git集成** - 加密文件可以安全提交到仓库
+- 📦 **版本控制** - 支持分支和历史记录
+- 🚀 **原生集成** - 与chezmoi完美配合
+- 🔑 **密钥对管理** - 公钥/私钥分离，更安全
+
+**工作流程：**
+1. 设置AGE加密密钥对
+2. 创建加密的tokens文件
+3. 安全提交到Git仓库
+4. 新机器：克隆→导入密钥→应用配置
+
+### 方案2：交互式设置（推荐新手）
 
 使用综合的token管理器：
 
@@ -543,7 +565,7 @@ chezmoi cd && git log --oneline -n 10
 - 🔒 加密存储
 - 📋 状态检查
 
-### 方案2：快速设置
+### 方案3：快速设置
 
 ```bash
 # 运行快速设置脚本
@@ -556,7 +578,7 @@ chezmoi cd && git log --oneline -n 10
 - 设置正确的文件权限
 - 自动应用chezmoi配置
 
-### 方案3：加密同步
+### 方案4：加密同步
 
 对于多机器环境，可以使用加密方式：
 
@@ -570,7 +592,7 @@ chezmoi cd && git log --oneline -n 10
 ~/.local/share/chezmoi/scripts/sync-tokens-encrypted.sh decrypt
 ```
 
-### 方案4：手动配置
+### 方案5：手动配置
 
 直接编辑token文件：
 
@@ -592,6 +614,17 @@ echo 'source ~/.env.tokens' >> ~/.zshrc
 # 应用chezmoi配置
 chezmoi apply
 ```
+
+## 🎯 选择建议
+
+| 如果你是... | 推荐方案 | 工具脚本 |
+|-------------|----------|----------|
+| **新手开发者** | 快速设置 | `setup-tokens.sh` |
+| **有经验开发者** | 交互式管理 | `token-manager.sh` |
+| **DevOps工程师** | AGE加密 | `chezmoi-token-manager.sh` |
+| **团队协作** | AGE加密 | `chezmoi-token-manager.sh` |
+
+**💡 详细对比请查看：** [TOKEN-MANAGEMENT-COMPARISON.md](TOKEN-MANAGEMENT-COMPARISON.md)
 
 ## 📋 需要配置的 Tokens
 
